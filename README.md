@@ -1,32 +1,34 @@
-# React + TypeScript + Vite
+# Mirror
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Single-user personal life dashboard PWA — money, diet, training, weight, goals, notes.
+Spec: [BLUEPRINT.md](BLUEPRINT.md) · standing rules: [CLAUDE.md](CLAUDE.md).
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Vite · React · TypeScript · Tailwind v4 · shadcn/ui · Supabase (Sydney) · Vercel.
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+cp .env.example .env.local   # fill in the Supabase URL + anon key
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The single user is created in the Supabase dashboard — there is no signup UI.
+
+## Scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Dev server |
+| `npm run build` | Type-check + production build (also emits the service worker) |
+| `npm run preview` | Serve the production build (test PWA install) |
+| `npm run icons` | Regenerate PWA icons from `public/mirror-mark.svg` |
+| `npm run lint` | Oxlint |
+
+## Deploy (Vercel)
+
+Framework preset **Vite**. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+in the Vercel project env vars. `vercel.json` rewrites all routes to the SPA.
+Install on iPhone: Safari → Share → Add to Home Screen.
