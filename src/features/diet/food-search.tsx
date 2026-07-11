@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { searchFoods } from "@/lib/data"
+import { getLastGrams, searchFoods } from "@/lib/data"
 import type { FoodRow } from "@/lib/database.types"
 import { displayName } from "./food-math"
 import { GramsDialog } from "./grams-dialog"
@@ -20,7 +20,16 @@ export function FoodSearch() {
   const [term, setTerm] = useState("")
   const [debounced, setDebounced] = useState("")
   const [dialogFood, setDialogFood] = useState<FoodRow | null>(null)
+  const [defaultGrams, setDefaultGrams] = useState(100)
   const logFood = useLogFood()
+
+  // Friction fix: prefill the grams you used last time for this food.
+  async function openFood(food: FoodRow) {
+    setDefaultGrams(100)
+    setDialogFood(food)
+    const last = await getLastGrams(food.id)
+    if (last) setDefaultGrams(last)
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(term.trim()), 250)
@@ -87,7 +96,7 @@ export function FoodSearch() {
                 <button
                   type="button"
                   className="flex w-full items-center justify-between gap-2 py-2 text-left hover:bg-muted/50"
-                  onClick={() => setDialogFood(food)}
+                  onClick={() => void openFood(food)}
                 >
                   <span className="min-w-0 truncate text-sm">{displayName(food)}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
@@ -107,6 +116,7 @@ export function FoodSearch() {
 
       <GramsDialog
         food={dialogFood}
+        defaultGrams={defaultGrams}
         saving={logFood.isPending}
         onSave={add}
         onOpenChange={(open) => {

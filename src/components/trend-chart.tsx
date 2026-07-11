@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import type { PointerEvent } from "react"
 
-export type WeightPoint = { t: number; kg: number }
+export type TrendPoint = { t: number; v: number; detail?: string }
 
 const W = 320
 const H = 110
@@ -14,47 +14,49 @@ const dateFormat = new Intl.DateTimeFormat("en-AU", {
   timeZone: "Australia/Melbourne",
 })
 
-/** Weight trend: 7-day trailing average as the line (the headline series,
- * CLAUDE.md rule 11), raw daily weigh-ins as muted dots. Single series —
- * no legend; colors come from chart tokens only. */
-export function WeightChart({
-  raw,
-  avg,
+/** Single-series time trend: token colors only, recessive grid, data-hugging
+ * y-domain, touch readout instead of a floating tooltip (mobile-first). */
+export function TrendChart({
+  line,
+  dots,
+  formatValue,
+  ariaLabel,
 }: {
-  raw: WeightPoint[]
-  avg: WeightPoint[]
+  line: TrendPoint[]
+  dots?: TrendPoint[]
+  formatValue: (v: number) => string
+  ariaLabel: string
 }) {
-  const [active, setActive] = useState<WeightPoint | null>(null)
+  const [active, setActive] = useState<TrendPoint | null>(null)
+  const markers = dots ?? line
 
   const { x, y, path, yTicks } = useMemo(() => {
-    const all = [...raw, ...avg]
+    const all = [...line, ...(dots ?? [])]
     const tMin = Math.min(...all.map((p) => p.t))
     const tMax = Math.max(...all.map((p) => p.t))
-    const kgMin = Math.min(...all.map((p) => p.kg)) - 0.4
-    const kgMax = Math.max(...all.map((p) => p.kg)) + 0.4
+    const span = Math.max(...all.map((p) => p.v)) - Math.min(...all.map((p) => p.v))
+    const pad = Math.max(span * 0.15, 0.4)
+    const vMin = Math.min(...all.map((p) => p.v)) - pad
+    const vMax = Math.max(...all.map((p) => p.v)) + pad
     const x = (t: number) =>
-      tMax === tMin
-        ? W / 2
-        : PAD_X + ((t - tMin) / (tMax - tMin)) * (W - 2 * PAD_X)
-    const y = (kg: number) =>
-      PAD_Y + (1 - (kg - kgMin) / (kgMax - kgMin)) * (H - 2 * PAD_Y)
-    const path = avg
-      .map((p, i) => `${i === 0 ? "M" : "L"}${x(p.t).toFixed(1)} ${y(p.kg).toFixed(1)}`)
+      tMax === tMin ? W / 2 : PAD_X + ((t - tMin) / (tMax - tMin)) * (W - 2 * PAD_X)
+    const y = (v: number) => PAD_Y + (1 - (v - vMin) / (vMax - vMin)) * (H - 2 * PAD_Y)
+    const path = line
+      .map((p, i) => `${i === 0 ? "M" : "L"}${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`)
       .join(" ")
-    const mid = (kgMin + kgMax) / 2
-    const yTicks = [kgMin + 0.4, mid, kgMax - 0.4].map((v) => ({
+    const yTicks = [vMin + pad, (vMin + vMax) / 2, vMax - pad].map((v) => ({
       v: Math.round(v * 10) / 10,
       py: y(v),
     }))
     return { x, y, path, yTicks }
-  }, [raw, avg])
+  }, [line, dots])
 
   function onPointer(event: PointerEvent<SVGSVGElement>) {
     const rect = event.currentTarget.getBoundingClientRect()
     const px = ((event.clientX - rect.left) / rect.width) * W
-    let nearest: WeightPoint | null = null
+    let nearest: TrendPoint | null = null
     let best = Infinity
-    for (const p of raw) {
+    for (const p of markers) {
       const d = Math.abs(x(p.t) - px)
       if (d < best) {
         best = d
@@ -64,24 +66,26 @@ export function WeightChart({
     setActive(nearest)
   }
 
+  if (line.length === 0 && markers.length === 0) return null
+
   return (
     <div className="flex flex-col gap-1">
       <p className="h-4 text-xs text-muted-foreground">
         {active
-          ? `${dateFormat.format(new Date(active.t))} · ${active.kg.toFixed(1)} kg`
-          : " "}
+          ? `${dateFormat.format(new Date(active.t))} · ${formatValue(active.v)}${active.detail ? ` (${active.detail})` : ""}`
+          : " "}
       </p>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="h-28 w-full touch-none select-none"
         role="img"
-        aria-label="Weight trend: 7-day average line with daily weigh-in dots"
+        aria-label={ariaLabel}
         onPointerMove={onPointer}
         onPointerDown={onPointer}
         onPointerLeave={() => setActive(null)}
       >
         {yTicks.map((tick) => (
-          <g key={tick.v}>
+          <g key={tick.py}>
             <line
               x1={PAD_X}
               x2={W - PAD_X}
@@ -100,15 +104,13 @@ export function WeightChart({
             </text>
           </g>
         ))}
-        {raw.map((p) => (
+        {dots?.map((p) => (
           <circle
             key={p.t}
             cx={x(p.t)}
-            cy={y(p.kg)}
+            cy={y(p.v)}
             r={active?.t === p.t ? 4 : 2.5}
-            className={
-              active?.t === p.t ? "fill-chart-1" : "fill-muted-foreground/40"
-            }
+            className={active?.t === p.t ? "fill-chart-1" : "fill-muted-foreground/40"}
           />
         ))}
         <path
@@ -119,10 +121,20 @@ export function WeightChart({
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+        {!dots &&
+          line.map((p) => (
+            <circle
+              key={p.t}
+              cx={x(p.t)}
+              cy={y(p.v)}
+              r={active?.t === p.t ? 4 : 2.5}
+              className="fill-chart-1"
+            />
+          ))}
       </svg>
       <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span>{dateFormat.format(new Date(raw[0]?.t ?? Date.now()))}</span>
-        <span>{dateFormat.format(new Date(raw.at(-1)?.t ?? Date.now()))}</span>
+        <span>{dateFormat.format(new Date(markers[0]?.t ?? Date.now()))}</span>
+        <span>{dateFormat.format(new Date(markers.at(-1)?.t ?? Date.now()))}</span>
       </div>
     </div>
   )

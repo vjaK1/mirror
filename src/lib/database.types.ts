@@ -56,6 +56,33 @@ export type Database = {
         }
         Relationships: []
       }
+      exercises: {
+        Row: {
+          created_at: string
+          id: string
+          is_custom: boolean
+          muscle_group: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_custom?: boolean
+          muscle_group: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_custom?: boolean
+          muscle_group?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       food_logs: {
         Row: {
           carbs_g: number
@@ -175,18 +202,21 @@ export type Database = {
           height_cm: number | null
           id: string
           user_id: string
+          weekly_session_target: number
         }
         Insert: {
           created_at?: string
           height_cm?: number | null
           id?: string
           user_id: string
+          weekly_session_target?: number
         }
         Update: {
           created_at?: string
           height_cm?: number | null
           id?: string
           user_id?: string
+          weekly_session_target?: number
         }
         Relationships: []
       }
@@ -214,6 +244,57 @@ export type Database = {
         }
         Relationships: []
       }
+      sets: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          reps: number
+          rpe: number | null
+          session_id: string
+          set_number: number
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          reps: number
+          rpe?: number | null
+          session_id: string
+          set_number: number
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          reps?: number
+          rpe?: number | null
+          session_id?: string
+          set_number?: number
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sets_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sets_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "workout_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weigh_ins: {
         Row: {
           created_at: string
@@ -235,6 +316,33 @@ export type Database = {
           measured_at?: string
           user_id?: string
           weight_kg?: number
+        }
+        Relationships: []
+      }
+      workout_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          session_type: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          session_type: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          session_type?: string
+          started_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -399,3 +507,8 @@ export type SavedMealRow = Database["public"]["Tables"]["saved_meals"]["Row"]
 export type DietPhaseRow = Database["public"]["Tables"]["diet_phases"]["Row"]
 export type WeighInRow = Database["public"]["Tables"]["weigh_ins"]["Row"]
 export type MacrosDailyRow = Database["public"]["Views"]["macros_daily"]["Row"]
+export type ExerciseRow = Database["public"]["Tables"]["exercises"]["Row"]
+export type WorkoutSessionRow = Database["public"]["Tables"]["workout_sessions"]["Row"]
+export type SetRow = Database["public"]["Tables"]["sets"]["Row"]
+export type SetInsert = Database["public"]["Tables"]["sets"]["Insert"]
+export type ProfileRow = Database["public"]["Tables"]["profile"]["Row"]

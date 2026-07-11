@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/
 import { MacrosCard } from "@/features/diet/macros-card"
 import { useWeighIns } from "@/features/diet/queries"
 import { trailingAverage } from "@/features/diet/weigh-in-card"
+import { TrainingCard } from "@/features/gym/training-card"
 
 function formatToday() {
   return new Intl.DateTimeFormat("en-AU", {
@@ -47,12 +48,7 @@ export function HomeScreen() {
       <MacrosCard />
 
       <div className="grid shrink-0 grid-cols-2 gap-3">
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription>Training</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Session 3</CardContent>
-        </Card>
+        <TrainingCard />
         <WeightCard />
       </div>
     </div>

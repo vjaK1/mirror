@@ -1,10 +1,18 @@
-import { PlaceholderScreen } from "@/components/placeholder-screen"
+import { AdherenceCard } from "@/features/gym/adherence-card"
+import { ProgressionCard } from "@/features/gym/progression-card"
+import { SessionView } from "@/features/gym/session-view"
+import { StartSession } from "@/features/gym/start-session"
+import { useTodaySession } from "@/features/gym/queries"
 
 export function GymScreen() {
+  const { data: today, isLoading } = useTodaySession()
+
   return (
-    <PlaceholderScreen
-      title="Gym"
-      note="Session logging with last-session prefill, progression and adherence land in Session 3."
-    />
+    <div className="flex flex-col gap-3 p-4">
+      <h1 className="font-heading text-lg font-semibold">Gym</h1>
+      {!isLoading && (today ? <SessionView session={today} /> : <StartSession />)}
+      <AdherenceCard />
+      <ProgressionCard />
+    </div>
   )
 }

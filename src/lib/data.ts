@@ -8,12 +8,16 @@ import { supabase } from "./supabase"
 import { logicalDay, logicalDayRange } from "./logical-day"
 import type {
   DietPhaseRow,
+  ExerciseRow,
   FoodLogInsert,
   FoodLogRow,
   FoodRow,
   MacrosDailyRow,
+  ProfileRow,
   SavedMealRow,
+  SetRow,
   WeighInRow,
+  WorkoutSessionRow,
 } from "./database.types"
 import type { ParseResponse } from "./parse-types"
 
@@ -208,6 +212,200 @@ export async function getWeighIns(sinceDays = 90): Promise<WeighInRow[]> {
     .order("measured_at", { ascending: true })
   if (error) throw error
   return data
+}
+
+/** Last grams logged for a food — prefills the grams dialog. */
+export async function getLastGrams(foodId: string): Promise<number | null> {
+  const { data, error } = await supabase
+    .from("food_logs")
+    .select("grams")
+    .eq("food_id", foodId)
+    .not("grams", "is", null)
+    .order("logged_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data?.grams ?? null
+}
+
+// --- exercises ---------------------------------------------------------------
+
+export async function getExercises(): Promise<ExerciseRow[]> {
+  const { data, error } = await supabase.from("exercises").select("*").order("name")
+  if (error) throw error
+  return data
+}
+
+export async function createCustomExercise(
+  name: string,
+  muscleGroup = "other",
+): Promise<ExerciseRow> {
+  const uid = await userId()
+  const { data, error } = await supabase
+    .from("exercises")
+    .insert({ name, muscle_group: muscleGroup, is_custom: true, user_id: uid })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// --- workout sessions ----------------------------------------------------------
+
+export type SessionType = "push" | "pull" | "legs" | "other"
+
+export async function startWorkoutSession(
+  type: SessionType,
+): Promise<WorkoutSessionRow> {
+  const uid = await userId()
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .insert({ session_type: type, user_id: uid })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function getTodaySession(): Promise<WorkoutSessionRow | null> {
+  const { start, end } = logicalDayRange(logicalDay())
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .select("*")
+    .gte("started_at", start)
+    .lt("started_at", end)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function getRecentSessions(limit = 40): Promise<WorkoutSessionRow[]> {
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .select("*")
+    .order("started_at", { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data
+}
+
+/** Latest previous session of a type (excluding one id) — the prefill source. */
+export async function getLastSessionOfType(
+  type: SessionType,
+  excludeId?: string,
+): Promise<WorkoutSessionRow | null> {
+  let query = supabase
+    .from("workout_sessions")
+    .select("*")
+    .eq("session_type", type)
+    .order("started_at", { ascending: false })
+    .limit(1)
+  if (excludeId) query = query.neq("id", excludeId)
+  const { data, error } = await query.maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function deleteWorkoutSession(id: string): Promise<void> {
+  const { error } = await supabase.from("workout_sessions").delete().eq("id", id)
+  if (error) throw error
+}
+
+// --- sets ----------------------------------------------------------------------
+
+export type SetWithExercise = SetRow & {
+  exercises: Pick<ExerciseRow, "name" | "muscle_group"> | null
+}
+
+export async function getSetsForSession(
+  sessionId: string,
+): Promise<SetWithExercise[]> {
+  const { data, error } = await supabase
+    .from("sets")
+    .select("*, exercises(name, muscle_group)")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: true })
+  if (error) throw error
+  return data as SetWithExercise[]
+}
+
+export async function insertSet(row: {
+  session_id: string
+  exercise_id: string
+  set_number: number
+  reps: number
+  weight_kg: number | null
+}): Promise<SetRow> {
+  const uid = await userId()
+  const { data, error } = await supabase
+    .from("sets")
+    .insert({ ...row, user_id: uid })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateSet(
+  id: string,
+  patch: { reps?: number; weight_kg?: number | null },
+): Promise<void> {
+  const { error } = await supabase.from("sets").update(patch).eq("id", id)
+  if (error) throw error
+}
+
+export async function deleteSet(id: string): Promise<void> {
+  const { error } = await supabase.from("sets").delete().eq("id", id)
+  if (error) throw error
+}
+
+export type SetWithSession = SetRow & {
+  workout_sessions: Pick<WorkoutSessionRow, "started_at" | "session_type"> | null
+}
+
+/** All sets for one exercise with session timestamps — progression data. */
+export async function getExerciseSets(exerciseId: string): Promise<SetWithSession[]> {
+  const { data, error } = await supabase
+    .from("sets")
+    .select("*, workout_sessions(started_at, session_type)")
+    .eq("exercise_id", exerciseId)
+    .order("created_at", { ascending: true })
+    .limit(400)
+  if (error) throw error
+  return data as SetWithSession[]
+}
+
+/** Exercise's most recent set anywhere — default values for a fresh set row. */
+export async function getLastSetForExercise(
+  exerciseId: string,
+): Promise<SetRow | null> {
+  const { data, error } = await supabase
+    .from("sets")
+    .select("*")
+    .eq("exercise_id", exerciseId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+// --- profile ---------------------------------------------------------------------
+
+export async function getProfile(): Promise<ProfileRow | null> {
+  const { data, error } = await supabase.from("profile").select("*").maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function setWeeklyTarget(target: number): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase
+    .from("profile")
+    .upsert({ user_id: uid, weekly_session_target: target }, { onConflict: "user_id" })
+  if (error) throw error
 }
 
 // --- edge functions ------------------------------------------------------------

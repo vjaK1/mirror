@@ -14,9 +14,11 @@ import { parseLog } from "@/lib/data"
 import type { FoodProposal } from "@/lib/parse-types"
 import { resolveLocally } from "@/features/quick-add/local-resolve"
 import { ParseConfirmation } from "@/features/quick-add/parse-confirmation"
+import { LiftConfirmation } from "@/features/quick-add/lift-confirmation"
+import type { LiftProposal } from "@/features/quick-add/lift-confirmation"
 import { useAddWeighIn } from "@/features/diet/queries"
 
-type Mode = "input" | "confirm" | "weigh"
+type Mode = "input" | "confirm" | "confirm-lift" | "weigh"
 
 /** The universal input (BLUEPRINT §3). Saved meals and unambiguous "Ng food"
  * text resolve locally; everything else goes through ai-parse-log. */
@@ -32,6 +34,7 @@ export function QuickAddSheet({
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [proposal, setProposal] = useState<FoodProposal | null>(null)
+  const [liftProposal, setLiftProposal] = useState<LiftProposal | null>(null)
   const [weight, setWeight] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const addWeighIn = useAddWeighIn()
@@ -42,6 +45,7 @@ export function QuickAddSheet({
     setBusy(false)
     setNotice(null)
     setProposal(null)
+    setLiftProposal(null)
     setWeight("")
   }
 
@@ -80,7 +84,15 @@ export function QuickAddSheet({
           setMode("confirm")
         }
       } else if (parsed.intent === "lift_log") {
-        setNotice("That looks like a lift — gym logging lands in Session 3.")
+        if (parsed.sets.length === 0) {
+          setNotice("Couldn't read any sets out of that — try e.g. bench 80kg 3x8.")
+        } else {
+          setLiftProposal({
+            session_type_guess: parsed.session_type_guess,
+            sets: parsed.sets,
+          })
+          setMode("confirm-lift")
+        }
       } else if (parsed.intent === "note") {
         setNotice("That looks like a note — notes land in Session 6.")
       } else {
@@ -113,14 +125,22 @@ export function QuickAddSheet({
       >
         <SheetHeader>
           <SheetTitle>
-            {mode === "confirm" ? "Confirm log" : mode === "weigh" ? "Weigh in" : "Quick add"}
+            {mode === "confirm"
+              ? "Confirm log"
+              : mode === "confirm-lift"
+                ? "Confirm lifts"
+                : mode === "weigh"
+                  ? "Weigh in"
+                  : "Quick add"}
           </SheetTitle>
           <SheetDescription>
             {mode === "confirm"
               ? "Check the numbers — adjust grams if needed."
-              : mode === "weigh"
-                ? "Today's weight in kilograms."
-                : "Type anything — food, a lift, a note, or a question."}
+              : mode === "confirm-lift"
+                ? "Check weights and reps before saving."
+                : mode === "weigh"
+                  ? "Today's weight in kilograms."
+                  : "Type anything — food, a lift, a note, or a question."}
           </SheetDescription>
         </SheetHeader>
 
@@ -131,6 +151,17 @@ export function QuickAddSheet({
               onDone={close}
               onCancel={() => {
                 setProposal(null)
+                setMode("input")
+              }}
+            />
+          </div>
+        ) : mode === "confirm-lift" && liftProposal ? (
+          <div className="px-4">
+            <LiftConfirmation
+              proposal={liftProposal}
+              onDone={close}
+              onCancel={() => {
+                setLiftProposal(null)
                 setMode("input")
               }}
             />
@@ -196,7 +227,11 @@ export function QuickAddSheet({
                 variant="secondary"
                 size="sm"
                 className="rounded-full"
-                onClick={() => setNotice("Gym logging lands in Session 3.")}
+                onClick={() => {
+                  setText("")
+                  setNotice('Type a lift, e.g. "bench 80kg 3x8, incline db 30kg 2x10"')
+                  inputRef.current?.focus()
+                }}
               >
                 <Dumbbell aria-hidden="true" />
                 Log lift

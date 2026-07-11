@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { TrendChart } from "@/components/trend-chart"
 import { useAddWeighIn, useWeighIns } from "./queries"
-import { WeightChart } from "./weight-chart"
-import type { WeightPoint } from "./weight-chart"
+
+type WeightPoint = { t: number; kg: number }
 
 const WEEK_MS = 7 * 86400_000
 
@@ -75,7 +76,14 @@ export function WeighInCard() {
             {addWeighIn.isPending ? "Saving…" : "Add"}
           </Button>
         </div>
-        {raw.length >= 2 && <WeightChart raw={raw} avg={avg} />}
+        {raw.length >= 2 && (
+          <TrendChart
+            line={avg.map((p) => ({ t: p.t, v: p.kg }))}
+            dots={raw.map((p) => ({ t: p.t, v: p.kg }))}
+            formatValue={(v) => `${v.toFixed(1)} kg`}
+            ariaLabel="Weight trend: 7-day average line with daily weigh-in dots"
+          />
+        )}
       </CardContent>
     </Card>
   )
