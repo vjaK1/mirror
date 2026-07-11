@@ -415,3 +415,6 @@ enabled = true
 
 [functions.ai-parse-log]
 verify_jwt = true
+
+[functions.daily-snapshot]
+verify_jwt = false

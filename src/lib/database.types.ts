@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          apy: number | null
+          created_at: string
+          currency: string
+          id: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          apy?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          apy?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      balance_events: {
+        Row: {
+          account_id: string
+          balance: number
+          created_at: string
+          id: string
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          balance: number
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          balance?: number
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "balance_events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diet_phases: {
         Row: {
           carbs_target_g: number
@@ -196,6 +261,117 @@ export type Database = {
         }
         Relationships: []
       }
+      fx_snapshots: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          pair: string
+          rate: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          pair?: string
+          rate: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          pair?: string
+          rate?: number
+        }
+        Relationships: []
+      }
+      holdings: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          shares: number
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          shares: number
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          shares?: number
+          symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      income_events: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          from_recurring: boolean
+          id: string
+          received_at: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          from_recurring?: boolean
+          id?: string
+          received_at?: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          from_recurring?: boolean
+          id?: string
+          received_at?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      price_snapshots: {
+        Row: {
+          close_price: number
+          created_at: string
+          currency: string
+          date: string
+          id: string
+          symbol: string
+        }
+        Insert: {
+          close_price: number
+          created_at?: string
+          currency?: string
+          date: string
+          id?: string
+          symbol: string
+        }
+        Update: {
+          close_price?: number
+          created_at?: string
+          currency?: string
+          date?: string
+          id?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       profile: {
         Row: {
           created_at: string
@@ -217,6 +393,39 @@ export type Database = {
           id?: string
           user_id?: string
           weekly_session_target?: number
+        }
+        Relationships: []
+      }
+      recurring_income: {
+        Row: {
+          amount: number
+          cadence: string
+          created_at: string
+          currency: string
+          id: string
+          next_date: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          cadence: string
+          created_at?: string
+          currency?: string
+          id?: string
+          next_date: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          cadence?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          next_date?: string
+          source?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -499,7 +708,6 @@ export const Constants = {
   },
 } as const
 
-
 export type FoodRow = Database["public"]["Tables"]["foods"]["Row"]
 export type FoodLogRow = Database["public"]["Tables"]["food_logs"]["Row"]
 export type FoodLogInsert = Database["public"]["Tables"]["food_logs"]["Insert"]
@@ -512,3 +720,10 @@ export type WorkoutSessionRow = Database["public"]["Tables"]["workout_sessions"]
 export type SetRow = Database["public"]["Tables"]["sets"]["Row"]
 export type SetInsert = Database["public"]["Tables"]["sets"]["Insert"]
 export type ProfileRow = Database["public"]["Tables"]["profile"]["Row"]
+export type AccountRow = Database["public"]["Tables"]["accounts"]["Row"]
+export type BalanceEventRow = Database["public"]["Tables"]["balance_events"]["Row"]
+export type IncomeEventRow = Database["public"]["Tables"]["income_events"]["Row"]
+export type RecurringIncomeRow = Database["public"]["Tables"]["recurring_income"]["Row"]
+export type HoldingRow = Database["public"]["Tables"]["holdings"]["Row"]
+export type PriceSnapshotRow = Database["public"]["Tables"]["price_snapshots"]["Row"]
+export type FxSnapshotRow = Database["public"]["Tables"]["fx_snapshots"]["Row"]

@@ -7,13 +7,20 @@
 import { supabase } from "./supabase"
 import { logicalDay, logicalDayRange } from "./logical-day"
 import type {
+  AccountRow,
+  BalanceEventRow,
   DietPhaseRow,
   ExerciseRow,
   FoodLogInsert,
   FoodLogRow,
   FoodRow,
+  FxSnapshotRow,
+  HoldingRow,
+  IncomeEventRow,
   MacrosDailyRow,
+  PriceSnapshotRow,
   ProfileRow,
+  RecurringIncomeRow,
   SavedMealRow,
   SetRow,
   WeighInRow,
@@ -406,6 +413,204 @@ export async function setWeeklyTarget(target: number): Promise<void> {
     .from("profile")
     .upsert({ user_id: uid, weekly_session_target: target }, { onConflict: "user_id" })
   if (error) throw error
+}
+
+// --- money -----------------------------------------------------------------------
+
+export async function getAccounts(): Promise<AccountRow[]> {
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("*")
+    .order("created_at")
+  if (error) throw error
+  return data
+}
+
+export async function createAccount(input: {
+  name: string
+  type: "hysa" | "brokerage" | "other"
+  currency?: string
+  apy?: number | null
+}): Promise<AccountRow> {
+  const uid = await userId()
+  const { data, error } = await supabase
+    .from("accounts")
+    .insert({ ...input, user_id: uid })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateAccountApy(id: string, apy: number | null): Promise<void> {
+  const { error } = await supabase.from("accounts").update({ apy }).eq("id", id)
+  if (error) throw error
+}
+
+export async function insertBalanceEvent(
+  accountId: string,
+  balance: number,
+): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase
+    .from("balance_events")
+    .insert({ account_id: accountId, balance, user_id: uid })
+  if (error) throw error
+}
+
+/** All balance events oldest-first — the net-worth series is derived client-side. */
+export async function getBalanceEvents(): Promise<BalanceEventRow[]> {
+  const { data, error } = await supabase
+    .from("balance_events")
+    .select("*")
+    .order("recorded_at", { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function insertIncomeEvent(input: {
+  amount: number
+  source: string
+  currency?: string
+  received_at?: string
+  from_recurring?: boolean
+}): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase
+    .from("income_events")
+    .insert({ ...input, user_id: uid })
+  if (error) throw error
+}
+
+export async function getIncomeEvents(limit = 20): Promise<IncomeEventRow[]> {
+  const { data, error } = await supabase
+    .from("income_events")
+    .select("*")
+    .order("received_at", { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data
+}
+
+export async function getRecurringIncome(): Promise<RecurringIncomeRow | null> {
+  const { data, error } = await supabase
+    .from("recurring_income")
+    .select("*")
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function upsertRecurringIncome(input: {
+  id?: string
+  amount: number
+  source: string
+  cadence: "weekly" | "fortnightly" | "monthly"
+  next_date: string
+}): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase
+    .from("recurring_income")
+    .upsert({ ...input, user_id: uid })
+  if (error) throw error
+}
+
+export async function deleteRecurringIncome(id: string): Promise<void> {
+  const { error } = await supabase.from("recurring_income").delete().eq("id", id)
+  if (error) throw error
+}
+
+function advance(date: string, cadence: "weekly" | "fortnightly" | "monthly"): string {
+  const d = new Date(`${date}T00:00:00Z`)
+  if (cadence === "weekly") d.setUTCDate(d.getUTCDate() + 7)
+  else if (cadence === "fortnightly") d.setUTCDate(d.getUTCDate() + 14)
+  else d.setUTCMonth(d.getUTCMonth() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Materialize due recurring income into income_events (BLUEPRINT §4).
+ * Runs on Money tab load; catches up multiple missed occurrences. */
+export async function materializeRecurringIncome(): Promise<number> {
+  const recurring = await getRecurringIncome()
+  if (!recurring) return 0
+  const today = logicalDay()
+  let next = recurring.next_date
+  let created = 0
+  while (next <= today && created < 12) {
+    await insertIncomeEvent({
+      amount: recurring.amount,
+      source: recurring.source,
+      currency: recurring.currency,
+      received_at: `${next}T09:00:00+10:00`,
+      from_recurring: true,
+    })
+    next = advance(next, recurring.cadence as "weekly" | "fortnightly" | "monthly")
+    created++
+  }
+  if (created > 0) {
+    const { error } = await supabase
+      .from("recurring_income")
+      .update({ next_date: next })
+      .eq("id", recurring.id)
+    if (error) throw error
+  }
+  return created
+}
+
+export async function getHolding(symbol = "VOO"): Promise<HoldingRow | null> {
+  const { data, error } = await supabase
+    .from("holdings")
+    .select("*")
+    .eq("symbol", symbol)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function upsertHolding(symbol: string, shares: number): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase
+    .from("holdings")
+    .upsert(
+      { symbol, shares, currency: "USD", user_id: uid },
+      { onConflict: "user_id,symbol" },
+    )
+  if (error) throw error
+}
+
+export async function getPriceSnapshots(
+  symbol = "VOO",
+  sinceDays = 120,
+): Promise<PriceSnapshotRow[]> {
+  const since = new Date(Date.now() - sinceDays * 86400_000)
+    .toISOString()
+    .slice(0, 10)
+  const { data, error } = await supabase
+    .from("price_snapshots")
+    .select("*")
+    .eq("symbol", symbol)
+    .gte("date", since)
+    .order("date", { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function getFxSnapshots(
+  pair = "AUDUSD",
+  sinceDays = 120,
+): Promise<FxSnapshotRow[]> {
+  const since = new Date(Date.now() - sinceDays * 86400_000)
+    .toISOString()
+    .slice(0, 10)
+  const { data, error } = await supabase
+    .from("fx_snapshots")
+    .select("*")
+    .eq("pair", pair)
+    .gte("date", since)
+    .order("date", { ascending: true })
+  if (error) throw error
+  return data
 }
 
 // --- edge functions ------------------------------------------------------------

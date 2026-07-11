@@ -5,6 +5,7 @@ import { registerSW } from "virtual:pwa-register"
 import "./index.css"
 import App from "./App.tsx"
 import { AuthProvider } from "@/components/auth-provider"
+import { PrivacyProvider } from "@/components/privacy-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 
 registerSW({ immediate: true })
@@ -20,7 +21,9 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider>
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <PrivacyProvider>
+            <App />
+          </PrivacyProvider>
         </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>

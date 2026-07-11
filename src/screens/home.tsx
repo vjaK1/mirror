@@ -4,6 +4,7 @@ import { MacrosCard } from "@/features/diet/macros-card"
 import { useWeighIns } from "@/features/diet/queries"
 import { trailingAverage } from "@/features/diet/weigh-in-card"
 import { TrainingCard } from "@/features/gym/training-card"
+import { MoneyCard } from "@/features/money/money-card"
 
 function formatToday() {
   return new Intl.DateTimeFormat("en-AU", {
@@ -33,17 +34,7 @@ export function HomeScreen() {
         </Link>
       </header>
 
-      <Card className="min-h-0 flex-1 shadow-sm">
-        <CardHeader>
-          <CardDescription>Net worth</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col justify-center gap-1">
-          <p className="text-3xl font-semibold tracking-tight text-muted-foreground/40">
-            $——
-          </p>
-          <p className="text-xs text-muted-foreground">Wired in Session 4</p>
-        </CardContent>
-      </Card>
+      <MoneyCard />
 
       <MacrosCard />
 
