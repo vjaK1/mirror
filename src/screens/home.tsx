@@ -1,6 +1,8 @@
 import { Link } from "react-router"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { MacrosCard } from "@/features/diet/macros-card"
+import { useWeighIns } from "@/features/diet/queries"
+import { trailingAverage } from "@/features/diet/weigh-in-card"
 
 function formatToday() {
   return new Intl.DateTimeFormat("en-AU", {
@@ -42,23 +44,7 @@ export function HomeScreen() {
         </CardContent>
       </Card>
 
-      <Card className="min-h-0 flex-[1.2] shadow-sm">
-        <CardHeader>
-          <CardDescription>Remaining today</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col justify-center gap-3">
-          <p className="text-3xl font-semibold tracking-tight text-muted-foreground/40">
-            —— kcal
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            <MacroBar label="Protein" barClass="bg-macro-protein" />
-            <MacroBar label="Carbs" barClass="bg-macro-carbs" />
-            <MacroBar label="Fat" barClass="bg-macro-fat" />
-            <MacroBar label="Fibre" barClass="bg-macro-fibre" />
-          </div>
-          <p className="text-xs text-muted-foreground">Wired in Session 2</p>
-        </CardContent>
-      </Card>
+      <MacrosCard />
 
       <div className="grid shrink-0 grid-cols-2 gap-3">
         <Card size="sm">
@@ -67,24 +53,38 @@ export function HomeScreen() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">Session 3</CardContent>
         </Card>
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription>Weight</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Session 2</CardContent>
-        </Card>
+        <WeightCard />
       </div>
     </div>
   )
 }
 
-function MacroBar({ label, barClass }: { label: string; barClass: string }) {
+/** 7-day trailing average is the headline (CLAUDE.md rule 11); the goal-pace
+ * projection arrives with goals in Session 6. */
+function WeightCard() {
+  const { data: weighIns } = useWeighIns(30)
+  const avg = trailingAverage(
+    (weighIns ?? []).map((w) => ({
+      t: new Date(w.measured_at).getTime(),
+      kg: w.weight_kg,
+    })),
+  ).at(-1)?.kg
+
   return (
-    <div className="flex flex-col gap-1">
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full w-1/3 rounded-full", barClass)} />
-      </div>
-      <span className="text-[10px] text-muted-foreground">{label}</span>
-    </div>
+    <Card size="sm">
+      <CardHeader>
+        <CardDescription>Weight</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {avg ? (
+          <>
+            <p className="text-lg font-semibold tracking-tight">{avg.toFixed(1)} kg</p>
+            <p className="text-[11px] text-muted-foreground">7-day avg</p>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">No weigh-ins yet</p>
+        )}
+      </CardContent>
+    </Card>
   )
 }
