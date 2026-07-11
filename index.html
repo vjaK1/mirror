@@ -2,9 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>scaffold</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Mirror</title>
+    <link rel="icon" type="image/svg+xml" href="/mirror-mark.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F6" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1C1C1A" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Mirror" />
+    <script>
+      // Apply the stored theme before first paint to avoid a light flash.
+      ;(function () {
+        try {
+          var theme = localStorage.getItem("mirror-theme")
+          var dark =
+            theme === "dark" ||
+            ((!theme || theme === "system") &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches)
+          if (dark) document.documentElement.classList.add("dark")
+        } catch (_) {
+          /* first paint falls back to light */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
