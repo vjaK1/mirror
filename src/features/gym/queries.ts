@@ -44,11 +44,10 @@ export function useLastSessionOfType(
   })
 }
 
-export function useExerciseSets(exerciseId: string | undefined) {
+export function useSessionsSince(days = 140) {
   return useQuery({
-    queryKey: ["gym-exercise-sets", exerciseId],
-    queryFn: () => data.getExerciseSets(exerciseId!),
-    enabled: !!exerciseId,
+    queryKey: ["gym-sessions-since", days],
+    queryFn: () => data.getSessionsSince(days),
   })
 }
 

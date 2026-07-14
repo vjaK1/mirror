@@ -1,5 +1,5 @@
+import { ActivityCard } from "@/features/gym/activity-card"
 import { AdherenceCard } from "@/features/gym/adherence-card"
-import { ProgressionCard } from "@/features/gym/progression-card"
 import { SessionView } from "@/features/gym/session-view"
 import { StartSession } from "@/features/gym/start-session"
 import { useTodaySession } from "@/features/gym/queries"
@@ -11,8 +11,8 @@ export function GymScreen() {
     <div className="flex flex-col gap-3 p-4">
       <h1 className="font-heading text-lg font-semibold">Gym</h1>
       {!isLoading && (today ? <SessionView session={today} /> : <StartSession />)}
+      <ActivityCard />
       <AdherenceCard />
-      <ProgressionCard />
     </div>
   )
 }

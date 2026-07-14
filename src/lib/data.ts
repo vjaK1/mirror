@@ -298,6 +298,18 @@ export async function getRecentSessions(limit = 40): Promise<WorkoutSessionRow[]
   return data
 }
 
+/** Sessions in the trailing window, oldest first — feeds the activity grid. */
+export async function getSessionsSince(days = 140): Promise<WorkoutSessionRow[]> {
+  const since = new Date(Date.now() - days * 86400_000).toISOString()
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .select("*")
+    .gte("started_at", since)
+    .order("started_at", { ascending: true })
+  if (error) throw error
+  return data
+}
+
 /** Latest previous session of a type (excluding one id) — the prefill source. */
 export async function getLastSessionOfType(
   type: SessionType,
