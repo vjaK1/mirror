@@ -42,3 +42,15 @@ Done when: I can log a real day of eating (mix of saved meals + one AI-parsed no
 ## Sessions 3–6 — pattern
 
 Same shape each time: "Read CLAUDE.md and BLUEPRINT.md, then build [gym | money | ask-AI | notes & goals] per BLUEPRINT §4/§5/§8 [session N]. Schema + types first, then edge functions, then UI, then wire the relevant Home card. Done when [the §8 checklist for that session]." Before each session, tell Claude Code any friction you found using the previous module so fixes land first.
+
+---
+
+## Session 7+ — improvements (v1 is done; pick from the backlog)
+
+Pick ONE item from BLUEPRINT §8 "Session 7+ — post-v1 backlog" per session. Prompt shape:
+
+"Read CLAUDE.md and BLUEPRINT.md. First, friction fixes: [list anything that annoyed you since last session]. Then build [backlog item] end-to-end — same conventions as v1: schema + generated types first (if any), then edge functions, then UI; all writes through the data-access layer; commit in slices; build and console clean. Done when [one concrete, testable outcome you'll verify yourself]."
+
+Notes:
+- The top three (digest push, barcode scan, offline queue) are ordered by leverage — start there unless real use says otherwise.
+- New external services (push provider, etc.) follow the same secrets rule: keys live in edge function secrets, never in the repo.

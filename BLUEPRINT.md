@@ -184,7 +184,20 @@ Single Supabase user created via dashboard; public signups disabled. RLS on all 
 
 Between sessions: Victor uses the new module with real data for a day or two; friction fixes land before the next module starts.
 
-**Later (not v1):** IBKR API auto-sync, offline queue (IndexedDB behind the data-access layer), CSV export, biometric app lock, bank CSV import.
+**Session 7+ — post-v1 backlog.** One improvement per session, same rules as v1 (schema → edge → UI, friction fixes first). Candidates, roughly by leverage:
+
+*Top three:*
+1. **Evening AI digest (push).** Scheduled edge function (daily-snapshot pattern) calls the same read-only tools as `ai-ask` and sends a Web Push (iOS ≥16.4 supports PWA push) around 20:00: protein remaining, session logged or not, net-worth weekly move. Makes the app proactive.
+2. **Barcode scanning.** Browser `BarcodeDetector` + Open Food Facts (free, keyless) → scan packaged foods, save as custom food rows (compounds over time). Biggest remaining logging-speed win.
+3. **Offline queue.** IndexedDB write queue behind the data-access layer (the seam rule 6 exists for); replay on reconnect. Gyms and commutes have dead zones.
+
+*Diet:* photo meal logging (Claude vision → flagged `ai_estimate` per rule 8), voice input (Web Speech API into the + sheet), micronutrient report view (micros are already denormalized, no UI reads them).
+
+*Money:* implied spending (income − Δbalance per period as a read-only AI tool — insight with zero logging), VOO dividend income events, IBKR Flex Web Service auto-sync (token-based, unattended — not the MCP), bank CSV import.
+
+*Gym:* rest timer in the session view, plate calculator, auto-progression hints ("all sets at 80×8 last time — try 82.5").
+
+*Platform:* biometric app lock (WebAuthn — extends the privacy-blur posture), CSV export, app-logo redesign (new SVG into `public/mirror-mark.svg` → `npm run icons`).
 
 ---
 
