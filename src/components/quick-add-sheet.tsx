@@ -10,15 +10,23 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { parseLog } from "@/lib/data"
-import type { FoodProposal } from "@/lib/parse-types"
+import { askAI, parseLog } from "@/lib/data"
+import type { AskResponse, FoodProposal } from "@/lib/parse-types"
 import { resolveLocally } from "@/features/quick-add/local-resolve"
 import { ParseConfirmation } from "@/features/quick-add/parse-confirmation"
 import { LiftConfirmation } from "@/features/quick-add/lift-confirmation"
 import type { LiftProposal } from "@/features/quick-add/lift-confirmation"
+import { AskAnswer } from "@/features/quick-add/ask-answer"
 import { useAddWeighIn } from "@/features/diet/queries"
 
-type Mode = "input" | "confirm" | "confirm-lift" | "weigh"
+type Mode = "input" | "confirm" | "confirm-lift" | "weigh" | "answer"
+
+const QUESTION_START =
+  /^(am|are|is|was|were|how|what|when|where|which|who|why|did|do|does|have|has|can|could|should|would|will|show|compare|summarise|summarize|give me)\b/i
+
+function looksLikeQuestion(text: string): boolean {
+  return /\?\s*$/.test(text) || QUESTION_START.test(text.trim())
+}
 
 /** The universal input (BLUEPRINT §3). Saved meals and unambiguous "Ng food"
  * text resolve locally; everything else goes through ai-parse-log. */
@@ -35,6 +43,10 @@ export function QuickAddSheet({
   const [notice, setNotice] = useState<string | null>(null)
   const [proposal, setProposal] = useState<FoodProposal | null>(null)
   const [liftProposal, setLiftProposal] = useState<LiftProposal | null>(null)
+  const [askResult, setAskResult] = useState<{
+    question: string
+    response: Extract<AskResponse, { answer: string }>
+  } | null>(null)
   const [weight, setWeight] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const addWeighIn = useAddWeighIn()
@@ -46,7 +58,18 @@ export function QuickAddSheet({
     setNotice(null)
     setProposal(null)
     setLiftProposal(null)
+    setAskResult(null)
     setWeight("")
+  }
+
+  async function ask(question: string) {
+    const response = await askAI(question)
+    if ("error" in response) {
+      setNotice(`Couldn't answer that: ${response.error}`)
+    } else {
+      setAskResult({ question, response })
+      setMode("answer")
+    }
   }
 
   function close() {
@@ -61,6 +84,11 @@ export function QuickAddSheet({
     setBusy(true)
     setNotice(null)
     try {
+      // Obvious questions skip the parse classifier entirely (one less call).
+      if (looksLikeQuestion(trimmed)) {
+        await ask(trimmed)
+        return
+      }
       const local = await resolveLocally(trimmed)
       if (local) {
         setProposal(local)
@@ -96,7 +124,7 @@ export function QuickAddSheet({
       } else if (parsed.intent === "note") {
         setNotice("That looks like a note — notes land in Session 6.")
       } else {
-        setNotice("That looks like a question — Ask AI lands in Session 5.")
+        await ask(trimmed)
       }
     } catch (err) {
       setNotice(`Something went wrong: ${err instanceof Error ? err.message : err}`)
@@ -131,7 +159,9 @@ export function QuickAddSheet({
                 ? "Confirm lifts"
                 : mode === "weigh"
                   ? "Weigh in"
-                  : "Quick add"}
+                  : mode === "answer"
+                    ? "Answer"
+                    : "Quick add"}
           </SheetTitle>
           <SheetDescription>
             {mode === "confirm"
@@ -140,7 +170,9 @@ export function QuickAddSheet({
                 ? "Check weights and reps before saving."
                 : mode === "weigh"
                   ? "Today's weight in kilograms."
-                  : "Type anything — food, a lift, a note, or a question."}
+                  : mode === "answer"
+                    ? "From your own data, via read-only tools."
+                    : "Type anything — food, a lift, a note, or a question."}
           </SheetDescription>
         </SheetHeader>
 
@@ -164,6 +196,19 @@ export function QuickAddSheet({
                 setLiftProposal(null)
                 setMode("input")
               }}
+            />
+          </div>
+        ) : mode === "answer" && askResult ? (
+          <div className="px-4">
+            <AskAnswer
+              question={askResult.question}
+              response={askResult.response}
+              onAskAnother={() => {
+                setAskResult(null)
+                setText("")
+                setMode("input")
+              }}
+              onDone={close}
             />
           </div>
         ) : mode === "weigh" ? (
@@ -258,7 +303,13 @@ export function QuickAddSheet({
               </Button>
             </div>
             <Button type="submit" disabled={busy || !text.trim()}>
-              {busy ? "Parsing…" : "Parse & review"}
+              {busy
+                ? looksLikeQuestion(text.trim())
+                  ? "Thinking…"
+                  : "Parsing…"
+                : looksLikeQuestion(text.trim())
+                  ? "Ask"
+                  : "Parse & review"}
             </Button>
           </form>
         )}

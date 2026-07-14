@@ -26,7 +26,7 @@ import type {
   WeighInRow,
   WorkoutSessionRow,
 } from "./database.types"
-import type { ParseResponse } from "./parse-types"
+import type { AskResponse, ParseResponse } from "./parse-types"
 
 async function userId(): Promise<string> {
   const { data } = await supabase.auth.getSession()
@@ -639,4 +639,12 @@ export async function parseLog(text: string): Promise<ParseResponse> {
   })
   if (error) throw error
   return data as ParseResponse
+}
+
+export async function askAI(question: string): Promise<AskResponse> {
+  const { data, error } = await supabase.functions.invoke("ai-ask", {
+    body: { question },
+  })
+  if (error) throw error
+  return data as AskResponse
 }

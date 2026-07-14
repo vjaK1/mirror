@@ -45,6 +45,13 @@ export type FoodProposal = {
   unmatched: EstimateItem[]
 }
 
+export type AskResponse =
+  | {
+      answer: string
+      tool_calls: { name: string; input: Record<string, unknown>; result: unknown }[]
+    }
+  | { error: string }
+
 export type ParseResponse =
   | {
       intent: "food_log"
