@@ -15,17 +15,20 @@ const dateFormat = new Intl.DateTimeFormat("en-AU", {
 })
 
 /** Single-series time trend: token colors only, recessive grid, data-hugging
- * y-domain, touch readout instead of a floating tooltip (mobile-first). */
+ * y-domain, touch readout instead of a floating tooltip (mobile-first).
+ * Dense series stay a clean line — set showPoints only for sparse data. */
 export function TrendChart({
   line,
   dots,
   formatValue,
   ariaLabel,
+  showPoints = false,
 }: {
   line: TrendPoint[]
   dots?: TrendPoint[]
   formatValue: (v: number) => string
   ariaLabel: string
+  showPoints?: boolean
 }) {
   const [active, setActive] = useState<TrendPoint | null>(null)
   const markers = dots ?? line
@@ -122,6 +125,7 @@ export function TrendChart({
           strokeLinejoin="round"
         />
         {!dots &&
+          showPoints &&
           line.map((p) => (
             <circle
               key={p.t}
@@ -131,6 +135,9 @@ export function TrendChart({
               className="fill-chart-1"
             />
           ))}
+        {!dots && !showPoints && active && (
+          <circle cx={x(active.t)} cy={y(active.v)} r={4} className="fill-chart-1" />
+        )}
       </svg>
       <div className="flex justify-between text-[10px] text-muted-foreground">
         <span>{dateFormat.format(new Date(markers[0]?.t ?? Date.now()))}</span>

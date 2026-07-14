@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Trash2 } from "lucide-react"
 import { Amount } from "@/components/amount"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,7 +23,14 @@ import { Label } from "@/components/ui/label"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { AccountRow } from "@/lib/database.types"
 import { latestBalance, projectedMonthlyInterest } from "@/lib/money-math"
-import { useAccounts, useAddBalance, useBalanceEvents, useCreateAccount } from "./queries"
+import {
+  useAccounts,
+  useAddBalance,
+  useBalanceEvents,
+  useCreateAccount,
+  useDeleteAccount,
+  useUpdateApy,
+} from "./queries"
 
 type AccountType = "hysa" | "brokerage" | "other"
 
@@ -31,26 +39,42 @@ export function AccountsCard() {
   const { data: events } = useBalanceEvents()
   const addBalance = useAddBalance()
   const createAccount = useCreateAccount()
+  const updateApy = useUpdateApy()
+  const deleteAccount = useDeleteAccount()
 
   const [updating, setUpdating] = useState<AccountRow | null>(null)
   const [balanceInput, setBalanceInput] = useState("")
+  const [apyInput, setApyInput] = useState("")
+  const [deleting, setDeleting] = useState<AccountRow | null>(null)
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState("")
   const [type, setType] = useState<AccountType>("hysa")
   const [apy, setApy] = useState("")
 
-  function saveBalance() {
+  async function saveUpdate() {
+    if (!updating) return
+    const latest = latestBalance(events ?? [], updating.id)
     const balance = Number(balanceInput)
-    if (!updating || !Number.isFinite(balance) || balance < 0) return
-    addBalance.mutate(
-      { accountId: updating.id, balance },
-      {
-        onSuccess: () => {
-          setUpdating(null)
-          setBalanceInput("")
-        },
-      },
-    )
+    const newApy = apyInput === "" ? null : Number(apyInput)
+
+    const balanceChanged =
+      balanceInput !== "" &&
+      Number.isFinite(balance) &&
+      balance >= 0 &&
+      balance !== latest?.balance
+    const apyChanged =
+      updating.type === "hysa" &&
+      (apyInput === "" ? updating.apy != null : newApy !== updating.apy)
+
+    if (balanceChanged) {
+      await addBalance.mutateAsync({ accountId: updating.id, balance })
+    }
+    if (apyChanged) {
+      await updateApy.mutateAsync({ id: updating.id, apy: newApy })
+    }
+    setUpdating(null)
+    setBalanceInput("")
+    setApyInput("")
   }
 
   function saveAccount() {
@@ -115,9 +139,18 @@ export function AccountsCard() {
                   onClick={() => {
                     setUpdating(account)
                     setBalanceInput(latest?.balance.toString() ?? "")
+                    setApyInput(account.apy?.toString() ?? "")
                   }}
                 >
                   Update
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Delete ${account.name}`}
+                  onClick={() => setDeleting(account)}
+                >
+                  <Trash2 aria-hidden="true" />
                 </Button>
               </li>
             )
@@ -143,31 +176,80 @@ export function AccountsCard() {
           <DialogHeader>
             <DialogTitle>Update {updating?.name}</DialogTitle>
             <DialogDescription>
-              Records a new balance event (history is kept).
+              Balance changes append to history; the rate updates in place.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">$</span>
-            <Input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min={0}
-              value={balanceInput}
-              onChange={(e) => setBalanceInput(e.target.value)}
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") saveBalance()
-              }}
-            />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="update-balance">Balance $</Label>
+              <Input
+                id="update-balance"
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min={0}
+                value={balanceInput}
+                onChange={(e) => setBalanceInput(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {updating?.type === "hysa" && (
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="update-apy">Interest rate (APY %)</Label>
+                <Input
+                  id="update-apy"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.05"
+                  min={0}
+                  placeholder="5.10"
+                  value={apyInput}
+                  onChange={(e) => setApyInput(e.target.value)}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
               className="w-full"
-              onClick={saveBalance}
-              disabled={addBalance.isPending || !balanceInput}
+              onClick={() => void saveUpdate()}
+              disabled={addBalance.isPending || updateApy.isPending}
             >
-              {addBalance.isPending ? "Saving…" : "Save balance"}
+              {addBalance.isPending || updateApy.isPending ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete {deleting?.name}?</DialogTitle>
+            <DialogDescription>
+              Removes the account and its whole balance history from net worth.
+              This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setDeleting(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              disabled={deleteAccount.isPending}
+              onClick={() => {
+                if (!deleting) return
+                deleteAccount.mutate(deleting.id, {
+                  onSuccess: () => setDeleting(null),
+                })
+              }}
+            >
+              {deleteAccount.isPending ? "Deleting…" : "Delete account"}
             </Button>
           </DialogFooter>
         </DialogContent>

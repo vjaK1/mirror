@@ -447,6 +447,12 @@ export async function updateAccountApy(id: string, apy: number | null): Promise<
   if (error) throw error
 }
 
+/** Deletes the account and (via FK cascade) its balance history. */
+export async function deleteAccount(id: string): Promise<void> {
+  const { error } = await supabase.from("accounts").delete().eq("id", id)
+  if (error) throw error
+}
+
 export async function insertBalanceEvent(
   accountId: string,
   balance: number,

@@ -44,6 +44,29 @@ export function GramsDialog({
               : "Enter an amount"}
           </DialogDescription>
         </DialogHeader>
+        {food?.portion_grams && food.portion_name && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[1, 2, 3, 4].map((n) => (
+              <Button
+                key={n}
+                type="button"
+                variant={
+                  grams === Math.round(n * food.portion_grams!)
+                    ? "default"
+                    : "secondary"
+                }
+                size="xs"
+                className="rounded-full"
+                onClick={() => setGrams(Math.round(n * food.portion_grams!))}
+              >
+                {n} {n === 1 ? food.portion_name : `${food.portion_name}s`}
+              </Button>
+            ))}
+            <span className="text-xs text-muted-foreground">
+              1 {food.portion_name} = {food.portion_grams} g
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Input
             type="number"

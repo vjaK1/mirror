@@ -219,6 +219,8 @@ export type Database = {
           iron_mg: number | null
           kcal: number
           name: string
+          portion_grams: number | null
+          portion_name: string | null
           potassium_mg: number | null
           protein_g: number
           sodium_mg: number | null
@@ -236,6 +238,8 @@ export type Database = {
           iron_mg?: number | null
           kcal: number
           name: string
+          portion_grams?: number | null
+          portion_name?: string | null
           potassium_mg?: number | null
           protein_g: number
           sodium_mg?: number | null
@@ -253,6 +257,8 @@ export type Database = {
           iron_mg?: number | null
           kcal?: number
           name?: string
+          portion_grams?: number | null
+          portion_name?: string | null
           potassium_mg?: number | null
           protein_g?: number
           sodium_mg?: number | null

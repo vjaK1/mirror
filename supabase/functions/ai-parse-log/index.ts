@@ -174,7 +174,7 @@ async function parseWithClaude(text: string, candidates: FoodRow[]) {
   const system = [
     "You parse a short user message from a personal food/training tracker into a structured log proposal.",
     "Classify intent: food_log (ate/drank something), lift_log (gym sets), note (reminder/journal), question (asking about their data).",
-    "For food_log: split the text into items. Match each item to ONE candidate food from the provided list by id — never invent an id, never match to a food not in the list. Estimate grams from the text; convert colloquial portions (1 egg ≈ 50 g, 1 cup cooked rice ≈ 180 g, 1 scoop protein powder ≈ 30 g, 1 slice bread ≈ 40 g, 1 tbsp ≈ 15 g/20 g oil, 1 banana ≈ 120 g, 1 can tuna ≈ 95 g drained). Do not compute macros for matched items — the server does that.",
+    "For food_log: split the text into items. Match each item to ONE candidate food from the provided list by id — never invent an id, never match to a food not in the list. Estimate grams from the text; convert colloquial portions (1 raw/boiled egg ≈ 50 g, 1 scrambled egg ≈ 61 g, 1 fried egg ≈ 46 g, 1 cup cooked rice ≈ 180 g, 1 scoop protein powder ≈ 30 g, 1 slice bread ≈ 40 g, 1 tbsp ≈ 15 g/20 g oil, 1 banana ≈ 120 g, 1 can tuna ≈ 95 g drained). Do not compute macros for matched items — the server does that.",
     "If no candidate is a plausible match for an item, put it in unmatched with your best per-portion nutrition estimate (whole portion, not per 100 g).",
     "For lift_log: expand shorthand like '3x8' into that many identical sets. Weight in kg; bodyweight exercises get weight_kg null.",
     "For note: note_type todo for actionable reminders, journal for reflections, scratch otherwise.",

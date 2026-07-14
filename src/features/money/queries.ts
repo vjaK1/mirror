@@ -57,6 +57,18 @@ export function useUpdateApy() {
   })
 }
 
+export function useDeleteAccount() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => data.deleteAccount(id),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["accounts"] }),
+        qc.invalidateQueries({ queryKey: ["balance-events"] }),
+      ]),
+  })
+}
+
 export function useAddBalance() {
   const qc = useQueryClient()
   return useMutation({

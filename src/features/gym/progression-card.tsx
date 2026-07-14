@@ -53,6 +53,7 @@ export function ProgressionCard() {
           (series.length >= 2 ? (
             <TrendChart
               line={series}
+              showPoints
               formatValue={(v) => `e1RM ${v} kg`}
               ariaLabel="Estimated one-rep max of the top set per session"
             />
