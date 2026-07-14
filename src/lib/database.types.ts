@@ -291,6 +291,36 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          created_at: string
+          id: string
+          metric: string
+          name: string
+          target_date: string
+          target_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric: string
+          name: string
+          target_date: string
+          target_value: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric?: string
+          name?: string
+          target_date?: string
+          target_value?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       holdings: {
         Row: {
           created_at: string
@@ -347,6 +377,36 @@ export type Database = {
           id?: string
           received_at?: string
           source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_done: boolean | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_done?: boolean | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_done?: boolean | null
+          type?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -578,6 +638,15 @@ export type Database = {
       }
     }
     Functions: {
+      get_income_summary: { Args: { period?: string }; Returns: Json }
+      get_lift_progression: { Args: { exercise_name: string }; Returns: Json }
+      get_macros_range: { Args: { days?: number }; Returns: Json }
+      get_networth: { Args: never; Returns: Json }
+      get_networth_history: { Args: { days?: number }; Returns: Json }
+      get_notes: { Args: { note_type?: string }; Returns: Json }
+      get_remaining_today: { Args: never; Returns: Json }
+      get_session_adherence: { Args: never; Returns: Json }
+      get_weight_trend: { Args: { days?: number }; Returns: Json }
       logical_day: { Args: { ts: string }; Returns: string }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -733,3 +802,5 @@ export type RecurringIncomeRow = Database["public"]["Tables"]["recurring_income"
 export type HoldingRow = Database["public"]["Tables"]["holdings"]["Row"]
 export type PriceSnapshotRow = Database["public"]["Tables"]["price_snapshots"]["Row"]
 export type FxSnapshotRow = Database["public"]["Tables"]["fx_snapshots"]["Row"]
+export type NoteRow = Database["public"]["Tables"]["notes"]["Row"]
+export type GoalRow = Database["public"]["Tables"]["goals"]["Row"]

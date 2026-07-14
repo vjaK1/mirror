@@ -6,6 +6,7 @@ import { GymScreen } from "@/screens/gym"
 import { HomeScreen } from "@/screens/home"
 import { LoginScreen } from "@/screens/login"
 import { MoneyScreen } from "@/screens/money"
+import { NotesScreen } from "@/screens/notes"
 import { SettingsScreen } from "@/screens/settings"
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="diet" element={<DietScreen />} />
             <Route path="gym" element={<GymScreen />} />
             <Route path="money" element={<MoneyScreen />} />
+            <Route path="notes" element={<NotesScreen />} />
             <Route path="settings" element={<SettingsScreen />} />
           </Route>
         </Route>

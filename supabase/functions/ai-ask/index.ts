@@ -36,11 +36,23 @@ const TOOLS = [
   {
     name: "get_weight_trend",
     description:
-      "Weigh-in series with 7-day trailing average, current average, and slope in kg/week over the last N days.",
+      "Weigh-in series with 7-day trailing average, current average, slope in kg/week, and — if a goal is set — the target and projected weight at the goal date.",
     input_schema: {
       type: "object",
       properties: {
         days: { type: "integer", minimum: 7, maximum: 365, description: "Window (default 30)" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "get_notes",
+    description:
+      "Recent notes: todos (with done state), scratchpad entries, and journal entries. Filter by type or fetch all.",
+    input_schema: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["todo", "scratch", "journal"] },
       },
       additionalProperties: false,
     },
@@ -105,6 +117,8 @@ async function runTool(
       return (await sql`select public.get_macros_range(${Number(input.days ?? 7)}) as r`)[0].r;
     case "get_weight_trend":
       return (await sql`select public.get_weight_trend(${Number(input.days ?? 30)}) as r`)[0].r;
+    case "get_notes":
+      return (await sql`select public.get_notes(${input.type ? String(input.type) : null}) as r`)[0].r;
     case "get_lift_progression":
       return (await sql`select public.get_lift_progression(${String(input.exercise ?? "")}) as r`)[0].r;
     case "get_session_adherence":
@@ -156,7 +170,7 @@ Deno.serve(async (req) => {
     const system = [
       `You answer questions about Victor's personal data (diet, training, weight, money) using the read-only tools. Today is ${today} in Melbourne; the logical day ends at 03:00 (a 1am meal belongs to the previous day).`,
       "Always fetch real numbers with tools before answering — never estimate from memory. Money: VOO is USD, converted to AUD via the daily FX snapshot; report AUD unless asked otherwise.",
-      "Be concise and concrete: lead with the answer and the key numbers, then one or two lines of context. Use kg, g, kcal, $ as appropriate. If the tools can't answer (missing data or out of scope), say exactly what's missing. Notes and goals aren't tracked yet.",
+      "Be concise and concrete: lead with the answer and the key numbers, then one or two lines of context. Use kg, g, kcal, $ as appropriate. If the tools can't answer (missing data or out of scope), say exactly what's missing. Notes (todos/scratch/journal) are readable via get_notes; the weight goal and its projection come with get_weight_trend.",
       "Plain text only: no markdown, no asterisks, no headers. Short lines and simple hyphen lists are fine.",
     ].join("\n");
 

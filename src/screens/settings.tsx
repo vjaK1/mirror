@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { GoalCard } from "@/features/goals/goal-card"
 
 const themeOptions = [
   { value: "light", label: "Light", icon: Sun },
@@ -54,6 +55,8 @@ export function SettingsScreen() {
           </ToggleGroup>
         </CardContent>
       </Card>
+
+      <GoalCard />
 
       <Card>
         <CardHeader>

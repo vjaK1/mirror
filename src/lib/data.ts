@@ -15,9 +15,11 @@ import type {
   FoodLogRow,
   FoodRow,
   FxSnapshotRow,
+  GoalRow,
   HoldingRow,
   IncomeEventRow,
   MacrosDailyRow,
+  NoteRow,
   PriceSnapshotRow,
   ProfileRow,
   RecurringIncomeRow,
@@ -629,6 +631,79 @@ export async function getFxSnapshots(
     .order("date", { ascending: true })
   if (error) throw error
   return data
+}
+
+// --- notes -----------------------------------------------------------------------
+
+export type NoteType = "todo" | "scratch" | "journal"
+
+export async function getNotes(): Promise<NoteRow[]> {
+  const { data, error } = await supabase
+    .from("notes")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200)
+  if (error) throw error
+  return data
+}
+
+export async function createNote(type: NoteType, content: string): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase.from("notes").insert({
+    type,
+    content,
+    is_done: type === "todo" ? false : null,
+    user_id: uid,
+  })
+  if (error) throw error
+}
+
+export async function setNoteDone(id: string, done: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("notes")
+    .update({ is_done: done, updated_at: new Date().toISOString() })
+    .eq("id", id)
+  if (error) throw error
+}
+
+export async function updateNoteContent(id: string, content: string): Promise<void> {
+  const { error } = await supabase
+    .from("notes")
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq("id", id)
+  if (error) throw error
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const { error } = await supabase.from("notes").delete().eq("id", id)
+  if (error) throw error
+}
+
+// --- goals -----------------------------------------------------------------------
+
+export async function getGoal(): Promise<GoalRow | null> {
+  const { data, error } = await supabase
+    .from("goals")
+    .select("*")
+    .eq("metric", "weight_kg")
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function upsertGoal(input: {
+  name: string
+  target_value: number
+  target_date: string
+}): Promise<void> {
+  const uid = await userId()
+  const { error } = await supabase
+    .from("goals")
+    .upsert(
+      { ...input, metric: "weight_kg", user_id: uid },
+      { onConflict: "user_id,metric" },
+    )
+  if (error) throw error
 }
 
 // --- edge functions ------------------------------------------------------------

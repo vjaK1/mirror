@@ -18,6 +18,7 @@ import { LiftConfirmation } from "@/features/quick-add/lift-confirmation"
 import type { LiftProposal } from "@/features/quick-add/lift-confirmation"
 import { AskAnswer } from "@/features/quick-add/ask-answer"
 import { useAddWeighIn } from "@/features/diet/queries"
+import { useCreateNote } from "@/features/notes/queries"
 
 type Mode = "input" | "confirm" | "confirm-lift" | "weigh" | "answer"
 
@@ -50,6 +51,7 @@ export function QuickAddSheet({
   const [weight, setWeight] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const addWeighIn = useAddWeighIn()
+  const createNote = useCreateNote()
 
   function reset() {
     setMode("input")
@@ -122,7 +124,12 @@ export function QuickAddSheet({
           setMode("confirm-lift")
         }
       } else if (parsed.intent === "note") {
-        setNotice("That looks like a note — notes land in Session 6.")
+        await createNote.mutateAsync({
+          type: parsed.note_type,
+          content: parsed.content,
+        })
+        setText("")
+        setNotice(`Saved ${parsed.note_type}: “${parsed.content}”`)
       } else {
         await ask(trimmed)
       }
@@ -296,7 +303,11 @@ export function QuickAddSheet({
                 variant="secondary"
                 size="sm"
                 className="rounded-full"
-                onClick={() => setNotice("Notes land in Session 6.")}
+                onClick={() => {
+                  setText("note: ")
+                  setNotice(null)
+                  inputRef.current?.focus()
+                }}
               >
                 <NotebookPen aria-hidden="true" />
                 Note
