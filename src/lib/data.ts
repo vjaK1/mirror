@@ -39,13 +39,45 @@ async function userId(): Promise<string> {
 
 // --- foods -----------------------------------------------------------------
 
+/** Word-order-proof search: every word must appear in the name, so
+ * "soy milk" matches "Milk, soy". */
 export async function searchFoods(term: string): Promise<FoodRow[]> {
-  const { data, error } = await supabase
+  const words = term.trim().split(/\s+/).filter((w) => w.length >= 2)
+  let query = supabase.from("foods").select("*")
+  if (words.length === 0) {
+    query = query.ilike("name", `%${term.trim()}%`)
+  } else {
+    for (const word of words) query = query.ilike("name", `%${word}%`)
+  }
+  const { data, error } = await query.order("name").limit(12)
+  if (error) throw error
+  return data
+}
+
+/** Persists a confirmed AI estimate as a user-owned food (source
+ * 'ai_estimate', CLAUDE.md rule 8) so it's searchable and matchable from
+ * then on. Reuses an existing estimate row with the same name. */
+export async function findOrCreateEstimateFood(
+  name: string,
+  per100: { kcal: number; protein_g: number; carbs_g: number; fat_g: number; fibre_g: number },
+): Promise<FoodRow> {
+  const uid = await userId()
+  const { data: existing, error: findError } = await supabase
     .from("foods")
     .select("*")
-    .ilike("name", `%${term}%`)
-    .order("name")
-    .limit(12)
+    .eq("user_id", uid)
+    .eq("source", "ai_estimate")
+    .ilike("name", name)
+    .limit(1)
+    .maybeSingle()
+  if (findError) throw findError
+  if (existing) return existing
+
+  const { data, error } = await supabase
+    .from("foods")
+    .insert({ name, source: "ai_estimate", user_id: uid, ...per100 })
+    .select()
+    .single()
   if (error) throw error
   return data
 }

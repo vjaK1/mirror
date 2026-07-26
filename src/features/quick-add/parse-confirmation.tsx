@@ -3,13 +3,15 @@ import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { getFoodsByIds } from "@/lib/data"
+import { findOrCreateEstimateFood, getFoodsByIds } from "@/lib/data"
 import type { FoodLogInsert } from "@/lib/database.types"
-import type { FoodProposal, ProposalItem } from "@/lib/parse-types"
-import { itemFromFood, round1 } from "@/features/diet/food-math"
+import type { EstimateItem, FoodProposal, ProposalItem } from "@/lib/parse-types"
+import { itemFromFood, macrosFromPer100, round1 } from "@/features/diet/food-math"
 import { useLogFood } from "@/features/diet/queries"
 
-/** Per-item numbers with editable grams; nothing is written until Confirm. */
+/** Per-item numbers with editable grams; nothing is written until Confirm.
+ * Confirmed estimates are saved as user foods (source 'ai_estimate') so the
+ * app learns them — searchable and AI-matchable from then on. */
 export function ParseConfirmation({
   proposal,
   onDone,
@@ -20,6 +22,9 @@ export function ParseConfirmation({
   onCancel: () => void
 }) {
   const [items, setItems] = useState<ProposalItem[]>(proposal.items)
+  const [estimates, setEstimates] = useState<EstimateItem[]>(proposal.unmatched)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const logFood = useLogFood()
 
   const matchedIds = useMemo(
@@ -43,6 +48,13 @@ export function ParseConfirmation({
     )
   }
 
+  function setEstimateGrams(index: number, grams: number) {
+    if (!Number.isFinite(grams) || grams <= 0) return
+    setEstimates((prev) =>
+      prev.map((est, i) => (i === index ? { ...est, grams } : est)),
+    )
+  }
+
   const totals = useMemo(() => {
     let kcal = 0,
       protein = 0,
@@ -56,12 +68,13 @@ export function ParseConfirmation({
       fat += i.fat_g
       fibre += i.fibre_g
     }
-    for (const u of proposal.unmatched) {
-      kcal += u.ai_estimate.kcal
-      protein += u.ai_estimate.protein_g
-      carbs += u.ai_estimate.carbs_g
-      fat += u.ai_estimate.fat_g
-      fibre += u.ai_estimate.fibre_g
+    for (const est of estimates) {
+      const m = macrosFromPer100(est.per_100g, est.grams)
+      kcal += m.kcal
+      protein += m.protein_g
+      carbs += m.carbs_g
+      fat += m.fat_g
+      fibre += m.fibre_g
     }
     return {
       kcal: Math.round(kcal),
@@ -70,11 +83,13 @@ export function ParseConfirmation({
       fat: round1(fat),
       fibre: round1(fibre),
     }
-  }, [items, proposal.unmatched])
+  }, [items, estimates])
 
-  function confirm() {
-    const rows: Omit<FoodLogInsert, "user_id">[] = [
-      ...items.map((i) => ({
+  async function confirm() {
+    setSaving(true)
+    setError(null)
+    try {
+      const rows: Omit<FoodLogInsert, "user_id">[] = items.map((i) => ({
         food_id: i.matched_food_id,
         grams: i.grams,
         kcal: i.kcal,
@@ -85,21 +100,27 @@ export function ParseConfirmation({
         micros: i.micros,
         source: proposal.origin,
         raw_text: i.raw,
-      })),
-      ...proposal.unmatched.map((u) => ({
-        food_id: null,
-        grams: null,
-        kcal: u.ai_estimate.kcal,
-        protein_g: u.ai_estimate.protein_g,
-        carbs_g: u.ai_estimate.carbs_g,
-        fat_g: u.ai_estimate.fat_g,
-        fibre_g: u.ai_estimate.fibre_g,
-        micros: {},
-        source: "ai_estimate",
-        raw_text: u.raw,
-      })),
-    ]
-    logFood.mutate(rows, { onSuccess: onDone })
+      }))
+
+      for (const est of estimates) {
+        const food = await findOrCreateEstimateFood(est.name, est.per_100g)
+        rows.push({
+          food_id: food.id,
+          grams: est.grams,
+          ...macrosFromPer100(est.per_100g, est.grams),
+          micros: {},
+          source: "ai_estimate",
+          raw_text: est.raw,
+        })
+      }
+
+      await logFood.mutateAsync(rows)
+      onDone()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -132,21 +153,42 @@ export function ParseConfirmation({
             </div>
           </li>
         ))}
-        {proposal.unmatched.map((u) => (
-          <li key={u.raw} className="flex items-center gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{u.raw}</p>
-              <p className="text-xs text-muted-foreground">
-                {u.ai_estimate.kcal} kcal · P {u.ai_estimate.protein_g} · C{" "}
-                {u.ai_estimate.carbs_g} · F {u.ai_estimate.fat_g}
-              </p>
-            </div>
-            <Badge variant="outline" className="shrink-0 text-warning">
-              AI estimate
-            </Badge>
-          </li>
-        ))}
+        {estimates.map((est, index) => {
+          const m = macrosFromPer100(est.per_100g, est.grams)
+          return (
+            <li key={`${est.raw}-${index}`} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{est.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {m.kcal} kcal · P {m.protein_g} · C {m.carbs_g} · F {m.fat_g}
+                </p>
+              </div>
+              <Badge variant="outline" className="shrink-0 text-warning">
+                AI estimate
+              </Badge>
+              <div className="flex shrink-0 items-center gap-1">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  className="h-8 w-16 text-right"
+                  value={est.grams}
+                  min={1}
+                  onChange={(e) => setEstimateGrams(index, Number(e.target.value))}
+                  aria-label={`Grams of ${est.name}`}
+                />
+                <span className="text-xs text-muted-foreground">g</span>
+              </div>
+            </li>
+          )
+        })}
       </ul>
+
+      {estimates.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Estimated foods are saved to your food list — next time they'll match
+          without the AI.
+        </p>
+      )}
 
       <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
         <span className="font-medium">{totals.kcal} kcal</span>
@@ -155,18 +197,14 @@ export function ParseConfirmation({
         </span>
       </div>
 
-      {logFood.isError && (
-        <p className="text-sm text-destructive">
-          Save failed: {(logFood.error as Error).message}
-        </p>
-      )}
+      {error && <p className="text-sm text-destructive">Save failed: {error}</p>}
 
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onCancel}>
+        <Button variant="outline" className="flex-1" onClick={onCancel} disabled={saving}>
           Back
         </Button>
-        <Button className="flex-1" onClick={confirm} disabled={logFood.isPending}>
-          {logFood.isPending ? "Saving…" : "Confirm & save"}
+        <Button className="flex-1" onClick={() => void confirm()} disabled={saving}>
+          {saving ? "Saving…" : "Confirm & save"}
         </Button>
       </div>
     </div>

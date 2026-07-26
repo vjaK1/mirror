@@ -55,10 +55,12 @@ async function resolveGramsText(text: string): Promise<FoodProposal | null> {
     if (!grams || grams <= 0 || grams > 5000 || term.length < 3) return null
 
     const candidates = await searchFoods(term)
-    const containing = candidates.filter((c) =>
-      normalize(c.name).includes(term),
-    )
-    // Unambiguous only: a single containing match, or an exact name match.
+    const words = term.split(" ").filter((w) => w.length >= 2)
+    const containing = candidates.filter((c) => {
+      const name = normalize(c.name)
+      return words.every((w) => name.includes(w))
+    })
+    // Unambiguous only: a single all-words match, or an exact name match.
     const exact = containing.find((c) => normalize(c.name) === term)
     const food = exact ?? (containing.length === 1 ? containing[0] : undefined)
     if (!food) return null

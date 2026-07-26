@@ -1,7 +1,7 @@
 // Portion math from per-100g foods rows — the only client-side source of
 // nutrition numbers (CLAUDE.md rule 8).
 import type { FoodRow } from "@/lib/database.types"
-import type { ProposalItem } from "@/lib/parse-types"
+import type { Per100g, ProposalItem } from "@/lib/parse-types"
 
 export function round1(n: number): number {
   return Math.round(n * 10) / 10
@@ -9,6 +9,17 @@ export function round1(n: number): number {
 
 export function displayName(food: Pick<FoodRow, "name" | "brand">): string {
   return food.brand ? `${food.name} (${food.brand})` : food.name
+}
+
+export function macrosFromPer100(per100: Per100g, grams: number) {
+  const f = grams / 100
+  return {
+    kcal: Math.round(per100.kcal * f),
+    protein_g: round1(per100.protein_g * f),
+    carbs_g: round1(per100.carbs_g * f),
+    fat_g: round1(per100.fat_g * f),
+    fibre_g: round1(per100.fibre_g * f),
+  }
 }
 
 export function itemFromFood(

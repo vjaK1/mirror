@@ -22,15 +22,21 @@ export type ProposalItem = {
   confidence: "high" | "medium" | "low"
 }
 
+export type Per100g = {
+  kcal: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  fibre_g: number
+}
+
+/** An AI-estimated food: confirmed estimates are saved as user-owned foods
+ * rows (source 'ai_estimate') so they're searchable and matchable next time. */
 export type EstimateItem = {
   raw: string
-  ai_estimate: {
-    kcal: number
-    protein_g: number
-    carbs_g: number
-    fat_g: number
-    fibre_g: number
-  }
+  name: string
+  grams: number
+  per_100g: Per100g
   flagged: true
 }
 

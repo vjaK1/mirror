@@ -142,10 +142,14 @@ Input: raw text. Claude receives the text plus a candidate-food search from `foo
       "fibre_g": 0.6, "micros": {"sodium_mg": 2}, "confidence": "high" }
   ],
   "unmatched": [
-    { "raw": "…", "ai_estimate": { "kcal": 0, "protein_g": 0 }, "flagged": true }
+    { "raw": "…", "name": "Soy milk, unsweetened", "grams": 150,
+      "per_100g": { "kcal": 33, "protein_g": 2.9, "carbs_g": 1.2, "fat_g": 1.9, "fibre_g": 0.4 },
+      "flagged": true }
   ]
 }
 ```
+
+Confirmed estimates are persisted as user-owned `foods` rows (`source = 'ai_estimate'`, per rule 8) so they're searchable and AI-matchable from then on — the food table learns every novel food once.
 
 Lift intent: `{"intent":"lift_log","session_type_guess":"push","sets":[{"exercise":"Bench press","weight_kg":80,"reps":8}, …]}` (expand "3x8" into rows). Note intent: `{"intent":"note","note_type":"todo","content":"…"}`. Question intent: hand off to Job 2.
 

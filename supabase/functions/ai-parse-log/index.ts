@@ -58,10 +58,12 @@ const OUTPUT_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["raw", "ai_estimate"],
+        required: ["raw", "name", "grams", "per_100g"],
         properties: {
           raw: { type: "string" },
-          ai_estimate: {
+          name: { type: "string" },
+          grams: { type: "number" },
+          per_100g: {
             type: "object",
             additionalProperties: false,
             required: ["kcal", "protein_g", "carbs_g", "fat_g", "fibre_g"],
@@ -145,9 +147,10 @@ async function findCandidates(
   const byId = new Map<string, FoodRow>();
   for (const term of terms.slice(0, 8)) {
     // Two passes per term: substring match, then per-word match for
-    // colloquial phrasings ("chicken 200g" → "chicken").
+    // colloquial phrasings ("chicken 200g" → "chicken") and reordered
+    // names ("soy milk" → "Milk, soy").
     const words = term.split(" ").filter((w) => w.length >= 3);
-    const patterns = [term, ...words].slice(0, 3);
+    const patterns = [term, ...words].slice(0, 4);
     for (const p of patterns) {
       const { data } = await supabase
         .from("foods")
@@ -174,8 +177,8 @@ async function parseWithClaude(text: string, candidates: FoodRow[]) {
   const system = [
     "You parse a short user message from a personal food/training tracker into a structured log proposal.",
     "Classify intent: food_log (ate/drank something), lift_log (gym sets), note (reminder/journal), question (asking about their data).",
-    "For food_log: split the text into items. Match each item to ONE candidate food from the provided list by id — never invent an id, never match to a food not in the list. Estimate grams from the text; convert colloquial portions (1 raw/boiled egg ≈ 50 g, 1 scrambled egg ≈ 61 g, 1 fried egg ≈ 46 g, 1 cup cooked rice ≈ 180 g, 1 scoop protein powder ≈ 30 g, 1 slice bread ≈ 40 g, 1 tbsp ≈ 15 g/20 g oil, 1 banana ≈ 120 g, 1 can tuna ≈ 95 g drained). Do not compute macros for matched items — the server does that.",
-    "If no candidate is a plausible match for an item, put it in unmatched with your best per-portion nutrition estimate (whole portion, not per 100 g).",
+    "For food_log: split the text into items. Match each item to ONE candidate food from the provided list by id — never invent an id, never match to a food not in the list. Estimate grams from the text; convert colloquial portions (1 raw/boiled egg ≈ 50 g, 1 scrambled egg ≈ 61 g, 1 fried egg ≈ 46 g, 1 cup cooked rice ≈ 180 g, 1 scoop protein powder ≈ 30 g, 1 slice bread ≈ 40 g, 1 tbsp ≈ 15 g/20 g oil, 1 banana ≈ 120 g, 1 can tuna ≈ 95 g drained; for liquids treat ml ≈ g). Do not compute macros for matched items — the server does that.",
+    "If no candidate is a plausible match for an item, put it in unmatched with: a clean canonical name suitable for a food database (e.g. 'Soy milk, unsweetened' — capitalised, main food first, qualifier after a comma, no quantities), your grams estimate for the portion eaten, and your best per-100g nutrition estimate for that food (per 100 g, NOT per portion). These become saved foods the user re-logs later, so name and per-100g accuracy matter.",
     "For lift_log: expand shorthand like '3x8' into that many identical sets. Weight in kg; bodyweight exercises get weight_kg null.",
     "For note: note_type todo for actionable reminders, journal for reflections, scratch otherwise.",
     "items and unmatched are empty arrays unless intent is food_log; lift is null unless lift_log; note is null unless intent is note.",
@@ -272,9 +275,27 @@ Deno.serve(async (req) => {
 
     if (parsed.intent === "food_log") {
       const items = [];
+      const clamp = (n: unknown) =>
+        Number.isFinite(Number(n)) && Number(n) >= 0 ? round1(Number(n)) : 0;
       const unmatched = [...(parsed.unmatched ?? [])].map(
-        (u: { raw: string; ai_estimate: Record<string, number> }) => ({
-          ...u,
+        (u: {
+          raw: string;
+          name?: string;
+          grams?: number;
+          per_100g?: Record<string, number>;
+        }) => ({
+          raw: u.raw,
+          name: (u.name ?? u.raw ?? "Unknown food").slice(0, 80),
+          grams: Number.isFinite(Number(u.grams)) && Number(u.grams) > 0
+            ? Math.round(Number(u.grams))
+            : 100,
+          per_100g: {
+            kcal: clamp(u.per_100g?.kcal),
+            protein_g: clamp(u.per_100g?.protein_g),
+            carbs_g: clamp(u.per_100g?.carbs_g),
+            fat_g: clamp(u.per_100g?.fat_g),
+            fibre_g: clamp(u.per_100g?.fibre_g),
+          },
           flagged: true,
         }),
       );
@@ -286,7 +307,9 @@ Deno.serve(async (req) => {
           // to unmatched rather than trusting invented numbers.
           unmatched.push({
             raw: item.raw,
-            ai_estimate: { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0 },
+            name: item.raw.slice(0, 80),
+            grams: 100,
+            per_100g: { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fibre_g: 0 },
             flagged: true,
           });
         }
