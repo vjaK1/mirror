@@ -8,7 +8,7 @@ const root = path.resolve(import.meta.dirname, "..")
 const svgPath = path.join(root, "public", "mirror-mark.svg")
 const outDir = path.join(root, "public", "icons")
 const SVG_SIZE = 88
-const BACKGROUND = "#1C1C1A" // the mark's own tile color
+const BACKGROUND = "#0A0B0D" // the mark's own tile color (Quicksilver black mirror)
 
 await mkdir(outDir, { recursive: true })
 

@@ -15,12 +15,12 @@ export default defineConfig({
       manifest: {
         name: "Mirror",
         short_name: "Mirror",
-        description: "Personal life dashboard — money, diet, training, goals.",
+        description: "Personal life dashboard: money, diet, training, goals.",
         display: "standalone",
         start_url: "/",
         scope: "/",
-        theme_color: "#1C1C1A",
-        background_color: "#1C1C1A",
+        theme_color: "#0A0B0D",
+        background_color: "#0A0B0D",
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
