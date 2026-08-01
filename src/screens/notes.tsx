@@ -78,7 +78,7 @@ export function NotesScreen() {
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h1 className="font-heading text-lg font-semibold">Notes</h1>
+      <h1 className="font-heading text-2xl font-light tracking-tight">Notes</h1>
 
       <Card>
         <CardContent className="flex flex-col gap-2">

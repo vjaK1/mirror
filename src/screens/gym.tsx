@@ -9,7 +9,7 @@ export function GymScreen() {
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h1 className="font-heading text-lg font-semibold">Gym</h1>
+      <h1 className="font-heading text-2xl font-light tracking-tight">Gym</h1>
       {!isLoading && (today ? <SessionView session={today} /> : <StartSession />)}
       <ActivityCard />
       <AdherenceCard />

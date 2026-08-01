@@ -65,7 +65,7 @@ export function TodayLog() {
       <CardContent className="flex flex-col gap-1">
         {logs && logs.length > 0 ? (
           <>
-            <ul className="flex flex-col divide-y divide-border">
+            <ul className="flex flex-col divide-y divide-dashed divide-border">
               {logs.map((log) => (
                 <li key={log.id} className="flex items-center gap-2 py-2">
                   <span className="w-14 shrink-0 text-xs text-muted-foreground">

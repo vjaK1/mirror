@@ -7,7 +7,7 @@ import { WeighInCard } from "@/features/diet/weigh-in-card"
 export function DietScreen() {
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h1 className="font-heading text-lg font-semibold">Diet</h1>
+      <h1 className="font-heading text-2xl font-light tracking-tight">Diet</h1>
       <TodayLog />
       <QuickAddRow />
       <FoodSearch />

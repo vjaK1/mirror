@@ -138,6 +138,22 @@ export function TrendChart({
         {!dots && !showPoints && active && (
           <circle cx={x(active.t)} cy={y(active.v)} r={4} className="fill-chart-1" />
         )}
+        {line.length > 0 && (
+          <g>
+            <circle
+              cx={x(line[line.length - 1].t)}
+              cy={y(line[line.length - 1].v)}
+              r={7}
+              className="fill-chart-1/15"
+            />
+            <circle
+              cx={x(line[line.length - 1].t)}
+              cy={y(line[line.length - 1].v)}
+              r={3}
+              className="fill-chart-1"
+            />
+          </g>
+        )}
       </svg>
       <div className="flex justify-between text-[10px] text-muted-foreground">
         <span>{dateFormat.format(new Date(markers[0]?.t ?? Date.now()))}</span>

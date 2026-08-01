@@ -104,7 +104,7 @@ export function AccountsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <ul className="flex flex-col divide-y divide-border">
+        <ul className="flex flex-col divide-y divide-dashed divide-border">
           {(accounts ?? []).map((account) => {
             const latest = latestBalance(events ?? [], account.id)
             return (

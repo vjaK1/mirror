@@ -126,7 +126,7 @@ export function IncomeCard() {
           </Button>
         </div>
 
-        <div className="rounded-lg border border-border p-3">
+        <div className="rounded-xl border border-dashed border-border p-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
             Recurring salary
             {recurring && ` — next ${recurring.next_date}`}
@@ -183,7 +183,7 @@ export function IncomeCard() {
         </div>
 
         {income && income.length > 0 && (
-          <ul className="flex flex-col divide-y divide-border">
+          <ul className="flex flex-col divide-y divide-dashed divide-border">
             {income.slice(0, 5).map((event) => (
               <li key={event.id} className="flex items-center justify-between py-1.5">
                 <span className="text-sm">

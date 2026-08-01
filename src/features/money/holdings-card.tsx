@@ -59,7 +59,7 @@ export function HoldingsCard() {
       <CardContent className="flex flex-col gap-3">
         {valueAud != null && (
           <div>
-            <Amount value={valueAud} className="text-2xl font-semibold tracking-tight" />
+            <Amount value={valueAud} className="text-3xl font-extralight tracking-tight" />
             <p className="text-xs text-muted-foreground">
               <Amount value={valueUsd!} currency="USD" /> at {latestFx?.rate} AUD/USD
             </p>

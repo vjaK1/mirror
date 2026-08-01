@@ -25,7 +25,7 @@ export function TrainingCard() {
         <CardDescription>Training</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-lg font-semibold capitalize tracking-tight">{next}</p>
+        <p className="text-2xl font-light capitalize tracking-tight">{next}</p>
         <p className="text-[11px] text-muted-foreground">
           next · {thisWeek} of {target} this week
         </p>

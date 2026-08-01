@@ -24,7 +24,7 @@ export function SettingsScreen() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <h1 className="font-heading text-lg font-semibold">Settings</h1>
+      <h1 className="font-heading text-2xl font-light tracking-tight">Settings</h1>
 
       <Card>
         <CardHeader>

@@ -38,7 +38,7 @@ export function MacrosCard() {
           <CardDescription>Remaining today</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col justify-center gap-2">
-          <p className="text-2xl font-semibold tracking-tight">
+          <p className="text-3xl font-extralight tracking-tight">
             {Math.round(eaten.kcal)} kcal eaten
           </p>
           <p className="text-sm text-muted-foreground">
@@ -78,7 +78,7 @@ export function MacrosCard() {
         <div>
           <p
             className={cn(
-              "text-3xl font-semibold tracking-tight",
+              "text-4xl font-extralight tracking-tight",
               loading && "text-muted-foreground/40",
             )}
           >
@@ -106,7 +106,7 @@ export function MacrosCard() {
                     {Math.round(eaten[key])}/{Math.round(target)}g
                   </span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn("h-full rounded-full", barClass)}
                     style={{ width: `${fill}%` }}

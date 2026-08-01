@@ -90,7 +90,7 @@ export function FoodSearch() {
           />
         </div>
         {debounced.length >= 2 && (
-          <ul className="flex flex-col divide-y divide-border">
+          <ul className="flex flex-col divide-y divide-dashed divide-border">
             {(results ?? []).map((food) => (
               <li key={food.id}>
                 <button

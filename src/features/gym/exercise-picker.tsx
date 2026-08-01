@@ -55,7 +55,7 @@ export function ExercisePicker({
           autoFocus
           autoComplete="off"
         />
-        <ul className="flex max-h-64 flex-col divide-y divide-border overflow-y-auto">
+        <ul className="flex max-h-64 flex-col divide-y divide-dashed divide-border overflow-y-auto">
           {filtered.map((exercise) => (
             <li key={exercise.id}>
               <button

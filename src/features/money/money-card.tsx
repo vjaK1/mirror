@@ -51,7 +51,7 @@ export function MoneyCard() {
             <div>
               <Amount
                 value={current}
-                className="text-3xl font-semibold tracking-tight"
+                className="text-4xl font-extralight tracking-tight"
               />
               {delta && (
                 <p className="text-xs text-muted-foreground">
@@ -67,7 +67,7 @@ export function MoneyCard() {
                 </p>
               )}
             </div>
-            <div className="border-t border-border pt-2 text-sm">
+            <div className="border-t border-dashed border-border pt-2 text-sm">
               <div className="flex items-baseline justify-between py-0.5">
                 <span className="text-muted-foreground">VOO</span>
                 <span className="flex items-baseline gap-2">

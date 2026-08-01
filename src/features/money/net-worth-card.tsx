@@ -39,7 +39,7 @@ export function NetWorthCard() {
             <div>
               <Amount
                 value={current}
-                className="text-2xl font-semibold tracking-tight"
+                className="text-3xl font-extralight tracking-tight"
               />
               {delta && (
                 <p className="text-xs text-muted-foreground">

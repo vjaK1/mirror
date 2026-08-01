@@ -75,7 +75,7 @@ export function HomeScreen() {
           <Link
             to="/settings"
             aria-label="Settings"
-            className="flex size-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground"
+            className="flex size-9 items-center justify-center rounded-full bg-card text-sm font-semibold text-secondary-foreground shadow-card ring-1 ring-card-ring backdrop-blur-xl"
           >
             V
           </Link>
@@ -115,7 +115,7 @@ function WeightCard() {
       <CardContent>
         {avg ? (
           <>
-            <p className="text-lg font-semibold tracking-tight">{avg.toFixed(1)} kg</p>
+            <p className="text-2xl font-light tracking-tight">{avg.toFixed(1)} kg</p>
             <p className="text-[11px] text-muted-foreground">
               7-day avg
               {projected != null && goal && (
