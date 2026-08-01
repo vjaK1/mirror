@@ -70,7 +70,7 @@ export function PhaseCard() {
         <CardDescription>
           {active
             ? `${active.phase} since ${active.start_date}`
-            : "No active phase — targets power the Home card."}
+            : "No active phase. Targets power the Home card."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">

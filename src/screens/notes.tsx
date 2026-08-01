@@ -186,7 +186,7 @@ export function NotesScreen() {
         ))}
         {visible.length === 0 && (
           <li className="py-4 text-center text-sm text-muted-foreground">
-            Nothing here yet — add one above, or type “note: …” in the + sheet.
+            Nothing here yet. Add one above, or type “note: …” in the + sheet.
           </li>
         )}
       </ul>

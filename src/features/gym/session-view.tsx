@@ -216,7 +216,7 @@ export function SessionView({ session }: { session: WorkoutSessionRow }) {
 
         {groups.length === 0 && plan.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Empty session — add an exercise to start logging.
+            Empty session. Add an exercise to start logging.
           </p>
         )}
 
@@ -224,7 +224,7 @@ export function SessionView({ session }: { session: WorkoutSessionRow }) {
           <div className="rounded-lg border border-dashed border-border p-3">
             <p className="mb-2 text-xs font-medium text-muted-foreground">
               Last {session.session_type} ·{" "}
-              {last ? dateFormat.format(new Date(last.session.started_at)) : ""} — tap
+              {last ? dateFormat.format(new Date(last.session.started_at)) : ""} · tap
               to log the same
             </p>
             <div className="flex flex-col gap-3">

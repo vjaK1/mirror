@@ -64,7 +64,7 @@ export function NetWorthCard() {
             )}
             {hidden && series.length >= 2 && (
               <p className="text-xs text-muted-foreground">
-                Chart hidden — tap the eye to reveal.
+                Chart hidden. Tap the eye to reveal.
               </p>
             )}
           </>

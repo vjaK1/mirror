@@ -107,7 +107,7 @@ export function FoodSearch() {
             ))}
             {results && results.length === 0 && !isFetching && (
               <li className="py-2 text-sm text-muted-foreground">
-                No match — try the + sheet, the AI can estimate it.
+                No match. Try the + sheet, the AI can estimate it.
               </li>
             )}
           </ul>

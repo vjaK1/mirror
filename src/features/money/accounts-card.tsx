@@ -100,7 +100,7 @@ export function AccountsCard() {
       <CardHeader>
         <CardTitle>Accounts</CardTitle>
         <CardDescription>
-          Balance updates append to history — current value is the latest event.
+          Balance updates append to history. Current value is the latest event.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
@@ -157,7 +157,7 @@ export function AccountsCard() {
           })}
           {(accounts ?? []).length === 0 && (
             <li className="py-2 text-sm text-muted-foreground">
-              No accounts yet — add your HYSA to start.
+              No accounts yet. Add your HYSA to start.
             </li>
           )}
         </ul>

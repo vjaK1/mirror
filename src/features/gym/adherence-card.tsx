@@ -39,7 +39,7 @@ export function AdherenceCard() {
         <CardDescription>
           {thisWeek.length} of {target} sessions
           {byType.length > 0 &&
-            ` — ${byType.map(([t, n]) => `${t} ×${n}`).join(", ")}`}
+            ` · ${byType.map(([t, n]) => `${t} ×${n}`).join(", ")}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex items-center gap-2">

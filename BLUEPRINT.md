@@ -75,12 +75,14 @@ Theme (Light/Dark/System, default System) · privacy blur behavior · phase/targ
 ### Theme & visual rules
 Design tokens; dark mode is first-class (heaviest use is late-night gym). Macro identity colors: protein teal, carbs blue, fat amber, fibre green. One accent color elsewhere plus semantic green/amber/red. Flat surfaces, hairline borders, no decorative effects.
 
+**Visual language (v2): "Quicksilver."** The mirror's own material, chosen from a three-way pitch (Ledger / Instrument / Quicksilver). Light theme is silver fog (cool near-white gradient); dark theme is black mirror (near-black with a faint top sheen). Cards are frosted glass (translucent fill, hairline `card-ring`, backdrop blur, soft shadow in light only). One mercury-blue accent: darkened in light mode, the original mark blue `#85B7EB` in dark. Semantic color is quiet: soft green (on pace), bronze (attention). Type is the system SF stack (Geist removed); hero numbers are ultralight at large sizes; numerals are tabular app-wide. The mark's dashed centerline recurs as dashed hairline dividers and list separators. Trend lines end in a lit point with a soft halo. Motion stays in small doses and respects `prefers-reduced-motion`. No em dashes in UI copy. All of it lives in `src/index.css` tokens; components consume tokens only.
+
 ### PWA
 Manifest name "Mirror", standalone display, themed splash. App icon = the Mirror mark (solid shape + faint reflected twin across a dashed center line):
 
 ```svg
 <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
-  <rect width="88" height="88" rx="20" fill="#1C1C1A"/>
+  <rect width="88" height="88" rx="20" fill="#0A0B0D"/>
   <path d="M40 26 L28 44 L40 62 Z" fill="#85B7EB"/>
   <path d="M48 26 L60 44 L48 62 Z" fill="#85B7EB" opacity="0.32"/>
   <line x1="44" y1="24" x2="44" y2="64" stroke="#85B7EB" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.5"/>

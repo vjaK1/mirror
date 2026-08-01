@@ -185,7 +185,7 @@ export function ParseConfirmation({
 
       {estimates.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Estimated foods are saved to your food list — next time they'll match
+          Estimated foods are saved to your food list. Next time they'll match
           without the AI.
         </p>
       )}

@@ -113,7 +113,7 @@ export function TodayLog() {
         ) : (
           !isLoading && (
             <p className="py-2 text-sm text-muted-foreground">
-              Nothing logged yet — use the + button or add food below.
+              Nothing logged yet. Use the + button or add food below.
             </p>
           )
         )}

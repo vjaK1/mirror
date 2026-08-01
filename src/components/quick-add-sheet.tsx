@@ -102,7 +102,7 @@ export function QuickAddSheet({
         setNotice(`Couldn't parse that: ${parsed.error}`)
       } else if (parsed.intent === "food_log") {
         if (parsed.items.length === 0 && parsed.unmatched.length === 0) {
-          setNotice("Nothing recognisable as food in that — try adding grams.")
+          setNotice("Nothing recognisable as food in that. Try adding grams.")
         } else {
           setProposal({
             intent: "food_log",
@@ -115,7 +115,7 @@ export function QuickAddSheet({
         }
       } else if (parsed.intent === "lift_log") {
         if (parsed.sets.length === 0) {
-          setNotice("Couldn't read any sets out of that — try e.g. bench 80kg 3x8.")
+          setNotice("Couldn't read any sets out of that. Try e.g. bench 80kg 3x8.")
         } else {
           setLiftProposal({
             session_type_guess: parsed.session_type_guess,
@@ -172,14 +172,14 @@ export function QuickAddSheet({
           </SheetTitle>
           <SheetDescription>
             {mode === "confirm"
-              ? "Check the numbers — adjust grams if needed."
+              ? "Check the numbers. Adjust grams if needed."
               : mode === "confirm-lift"
                 ? "Check weights and reps before saving."
                 : mode === "weigh"
                   ? "Today's weight in kilograms."
                   : mode === "answer"
                     ? "From your own data, via read-only tools."
-                    : "Type anything — food, a lift, a note, or a question."}
+                    : "Type anything: food, a lift, a note, or a question."}
           </SheetDescription>
         </SheetHeader>
 

@@ -129,7 +129,7 @@ export function IncomeCard() {
         <div className="rounded-xl border border-dashed border-border p-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
             Recurring salary
-            {recurring && ` — next ${recurring.next_date}`}
+            {recurring && ` · next ${recurring.next_date}`}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <Input

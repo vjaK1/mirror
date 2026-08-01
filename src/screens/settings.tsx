@@ -74,7 +74,7 @@ export function SettingsScreen() {
         </CardContent>
       </Card>
 
-      <p className="text-center text-xs text-muted-foreground">Mirror v0.1 — scaffold</p>
+      <p className="text-center text-xs text-muted-foreground">Mirror · Quicksilver</p>
     </div>
   )
 }

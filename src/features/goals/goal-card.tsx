@@ -39,7 +39,7 @@ export function GoalCard() {
         <CardDescription>
           {goal
             ? `${goal.name}: ${goal.target_value} kg by ${goal.target_date}`
-            : "Target weight and date — drives the Home header and projection."}
+            : "Target weight and date. Drives the Home header and projection."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex items-end gap-2">

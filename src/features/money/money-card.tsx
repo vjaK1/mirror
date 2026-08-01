@@ -71,7 +71,7 @@ export function MoneyCard() {
               <div className="flex items-baseline justify-between py-0.5">
                 <span className="text-muted-foreground">VOO</span>
                 <span className="flex items-baseline gap-2">
-                  {vooAud != null ? <Amount value={vooAud} /> : "—"}
+                  {vooAud != null ? <Amount value={vooAud} /> : "–"}
                   {vooDayPct != null && (
                     <span
                       className={cn(
@@ -90,7 +90,7 @@ export function MoneyCard() {
                   {hysa?.name ?? "HYSA"}
                 </span>
                 <span className="flex items-baseline gap-2">
-                  {hysaBalance ? <Amount value={hysaBalance.balance} /> : "—"}
+                  {hysaBalance ? <Amount value={hysaBalance.balance} /> : "–"}
                   {hysa?.apy != null && (
                     <span className="text-xs text-muted-foreground">
                       {hysa.apy}% APY
