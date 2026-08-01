@@ -7,7 +7,7 @@ export function AppShell() {
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className="flex h-dvh flex-col">
       <main className="mx-auto min-h-0 w-full max-w-md flex-1 overflow-y-auto pt-[env(safe-area-inset-top)]">
         <Outlet />
       </main>

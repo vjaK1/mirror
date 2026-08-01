@@ -36,8 +36,8 @@ function TabLink({ tab }: { tab: Tab }) {
 
 export function BottomNav({ onQuickAdd }: { onQuickAdd: () => void }) {
   return (
-    <nav className="shrink-0 border-t bg-card pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto grid h-16 w-full max-w-md grid-cols-5">
+    <nav className="shrink-0 px-3 pb-[calc(env(safe-area-inset-bottom)+0.375rem)] pt-1">
+      <div className="mx-auto grid h-14 w-full max-w-md grid-cols-5 rounded-3xl bg-card shadow-card ring-1 ring-card-ring backdrop-blur-xl">
         {leftTabs.map((tab) => (
           <TabLink key={tab.to} tab={tab} />
         ))}
@@ -46,7 +46,7 @@ export function BottomNav({ onQuickAdd }: { onQuickAdd: () => void }) {
             type="button"
             onClick={onQuickAdd}
             aria-label="Quick add"
-            className="absolute left-1/2 top-0 flex size-14 -translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+            className="absolute left-1/2 top-0 flex size-14 -translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-95"
           >
             <Plus className="size-7" aria-hidden="true" />
           </button>
